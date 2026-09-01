@@ -39,7 +39,8 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
 }) => {
   const targetInfo = calculateEstimatedTargetDate(
     activeProfile.currentMilestoneId,
-    activeProfile.preferences.dailyTimeMinutes
+    activeProfile.preferences.dailyTimeMinutes,
+    activeProfile.preferences.targetExamDateMonths
   );
 
   // Active Timer State

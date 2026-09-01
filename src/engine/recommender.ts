@@ -365,18 +365,26 @@ export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
 
 export function calculateEstimatedTargetDate(
   currentMilestoneId: string,
-  dailyMinutes: number
+  dailyMinutes: number,
+  targetMonthsPreference?: number
 ): { monthsRemaining: number; targetDateFormatted: string; totalHoursNeeded: number } {
   const milestoneIndex = milestones.findIndex(m => m.id === currentMilestoneId);
   const remainingMilestones = milestones.slice(milestoneIndex >= 0 ? milestoneIndex : 0);
 
   const totalHoursNeeded = remainingMilestones.reduce((sum, m) => sum + m.targetHoursFloor, 0);
-  const dailyHours = dailyMinutes / 60;
-  const daysRemaining = Math.ceil(totalHoursNeeded / dailyHours);
-  const monthsRemaining = Math.max(1, Math.round(daysRemaining / 30));
-
+  
+  let monthsRemaining = 12;
   const targetDate = new Date();
-  targetDate.setDate(targetDate.getDate() + daysRemaining);
+
+  if (targetMonthsPreference && targetMonthsPreference > 0) {
+    monthsRemaining = targetMonthsPreference;
+    targetDate.setMonth(targetDate.getMonth() + targetMonthsPreference);
+  } else {
+    const dailyHours = Math.max(0.5, dailyMinutes / 60);
+    const daysRemaining = Math.ceil(totalHoursNeeded / dailyHours);
+    monthsRemaining = Math.max(1, Math.round(daysRemaining / 30));
+    targetDate.setDate(targetDate.getDate() + daysRemaining);
+  }
 
   const targetDateFormatted = targetDate.toLocaleDateString('en-US', {
     month: 'short',

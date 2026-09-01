@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { UserPreferences, UserProfile } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
-import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw, Calendar } from 'lucide-react';
 import { createCloudProfile, checkSlugAvailable, slugify } from '../engine/dataService';
 
 interface OnboardingModalProps {
@@ -25,6 +25,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [targetExam, setTargetExam] = useState<ExamTarget>('TEF_Canada');
   const [selectedFormats, setSelectedFormats] = useState<MediaFormat[]>(['podcast', 'youtube']);
   const [startingLevel, setStartingLevel] = useState<CEFRLevel>('A0');
+  const [targetMonths, setTargetMonths] = useState<number>(16);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -68,14 +69,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         dailyTimeMinutes: dailyMinutes,
         preferredFormats: selectedFormats,
         startingLevel,
-        targetExamDateMonths: 16,
+        targetExamDateMonths: targetMonths,
         targetExam,
         skillFrictions: ['EO', 'Conjugation']
       };
 
       const newProfile = await createCloudProfile(name, prefs, desiredSlug);
 
-      // Update URL with personal slug without reload
       const newUrl = `${window.location.origin}${window.location.pathname}?user=${newProfile.id}`;
       window.history.pushState({ path: newUrl }, '', newUrl);
 
@@ -103,28 +103,27 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             {isInitialSetup ? 'Create Your Canadian French Plan' : 'Configure New Study Profile'}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Your plan, rolling task queue, and study hours will sync automatically across your phone and laptop.
+            Your custom exam timeline, daily time budget, and rolling backlog will sync across all your devices.
           </p>
         </div>
 
         {/* Form Body */}
         <form onSubmit={handleSave} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           
-          {/* Name & Collision-Proof Slug */}
+          {/* Name & Slug */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block">
               1. Your Name / Personal Handle
             </label>
             <input
               type="text"
-              placeholder="e.g. Vasir or Rahul"
+              placeholder="e.g. Yashwanth or Rahul"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
               required
             />
 
-            {/* Generated Unique Access Link Preview */}
             {desiredSlug && (
               <div className="flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
                 <span className="truncate">
@@ -177,10 +176,39 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
+          {/* Target Timeline */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
+              3. Target Exam Timeline
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { months: 6, label: '6 Months', sub: 'Fast Track' },
+                { months: 12, label: '12 Months', sub: '1 Year Goal' },
+                { months: 16, label: '16 Months', sub: 'Dec 2027 Sprint' },
+                { months: 24, label: '24 Months', sub: '2 Year Steady' },
+              ].map(item => (
+                <button
+                  key={item.months}
+                  type="button"
+                  onClick={() => setTargetMonths(item.months)}
+                  className={`p-2.5 rounded-xl border text-left transition ${
+                    targetMonths === item.months
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500 shadow-sm'
+                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="text-xs font-bold text-white">{item.label}</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">{item.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Daily Commitment */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              3. Daily Time Available
+              4. Daily Time Commitment
             </label>
             <div className="grid grid-cols-4 gap-2">
               {[
@@ -208,7 +236,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Formats */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              4. Preferred Learning Formats
+              5. Preferred Learning Formats
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -238,10 +266,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Level */}
+          {/* Starting Level */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              5. Current Proficiency
+              6. Starting Baseline Level
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -266,7 +294,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Action Button */}
+          {/* Submit */}
           <button
             type="submit"
             disabled={!name.trim() || isSubmitting}
@@ -275,11 +303,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             {isSubmitting ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Creating Cloud Sync Profile...</span>
+                <span>Saving to Cloud Database...</span>
               </>
             ) : (
               <>
-                <span>Initialize Rolling Study Queue</span>
+                <span>Initialize Rolling Study Backlog</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
