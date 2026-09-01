@@ -33,17 +33,27 @@ function saveLocalBackupProfiles(profiles: Record<string, UserProfile>): void {
 
 // Convert DB row to UserProfile
 function rowToProfile(row: any): UserProfile {
+  let preferredFormats: MediaFormat[] = ['podcast', 'youtube'];
+  let secondaryLanguageBridge: SecondaryLanguageBridge = 'none';
+
+  if (Array.isArray(row.preferred_formats)) {
+    preferredFormats = row.preferred_formats;
+  } else if (row.preferred_formats && typeof row.preferred_formats === 'object') {
+    preferredFormats = row.preferred_formats.list || ['podcast', 'youtube'];
+    secondaryLanguageBridge = row.preferred_formats.bridge || 'none';
+  }
+
   return {
     id: row.id,
     name: row.name,
     tagline: `${(row.daily_time_minutes / 60).toFixed(1)}h / Day • ${row.target_exam?.replace('_', ' ') || 'TEF'} Focus`,
     preferences: {
       dailyTimeMinutes: row.daily_time_minutes,
-      preferredFormats: row.preferred_formats || ['podcast', 'youtube'],
+      preferredFormats,
       startingLevel: row.starting_level || 'A0',
       targetExamDateMonths: 16,
       targetExam: row.target_exam || 'TEF_Canada',
-      secondaryLanguageBridge: row.secondary_language_bridge || 'none',
+      secondaryLanguageBridge,
       skillFrictions: ['EO', 'Conjugation']
     },
     currentMilestoneId: row.current_milestone_id || 'milestone-a0',
@@ -66,9 +76,11 @@ function profileToRow(profile: UserProfile): any {
     name: profile.name,
     target_exam: profile.preferences.targetExam,
     daily_time_minutes: profile.preferences.dailyTimeMinutes,
-    preferred_formats: profile.preferences.preferredFormats,
+    preferred_formats: {
+      list: profile.preferences.preferredFormats,
+      bridge: profile.preferences.secondaryLanguageBridge || 'none'
+    },
     starting_level: profile.preferences.startingLevel,
-    secondary_language_bridge: profile.preferences.secondaryLanguageBridge || 'none',
     current_milestone_id: profile.currentMilestoneId,
     completed_milestone_ids: profile.completedMilestoneIds,
     active_task_queue: profile.activeTaskQueue,
