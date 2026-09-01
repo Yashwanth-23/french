@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { UserPreferences, UserProfile } from '../types/preferences';
+import { UserPreferences, UserProfile, LinguisticAnchor } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
-import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw, Calendar } from 'lucide-react';
+import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw, Languages } from 'lucide-react';
 import { createCloudProfile, checkSlugAvailable, slugify } from '../engine/dataService';
 
 interface OnboardingModalProps {
@@ -26,6 +26,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [selectedFormats, setSelectedFormats] = useState<MediaFormat[]>(['podcast', 'youtube']);
   const [startingLevel, setStartingLevel] = useState<CEFRLevel>('A0');
   const [targetMonths, setTargetMonths] = useState<number>(16);
+  const [linguisticAnchor, setLinguisticAnchor] = useState<LinguisticAnchor>('telugu');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -71,6 +72,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         startingLevel,
         targetExamDateMonths: targetMonths,
         targetExam,
+        linguisticAnchor,
         skillFrictions: ['EO', 'Conjugation']
       };
 
@@ -103,7 +105,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             {isInitialSetup ? 'Create Your Canadian French Plan' : 'Configure New Study Profile'}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Your custom exam timeline, daily time budget, and rolling backlog will sync across all your devices.
+            Your custom exam timeline, linguistic anchors, and rolling backlog will sync across all your devices.
           </p>
         </div>
 
@@ -148,10 +150,38 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             )}
           </div>
 
+          {/* Linguistic Anchor */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
+              2. Comparative Native Language Anchor
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'telugu', label: 'Telugu Native', sub: 'నువ్వు/మీరు, త/ద' },
+                { id: 'hindi', label: 'Hindi / National', sub: 'तू/आप, त/द, लिंग' },
+                { id: 'universal_english', label: 'English / Universal', sub: 'Latin Cognates & Syntax' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setLinguisticAnchor(item.id as LinguisticAnchor)}
+                  className={`p-2.5 rounded-xl border text-left transition ${
+                    linguisticAnchor === item.id
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-500 shadow-sm'
+                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="text-xs font-bold text-white">{item.label}</div>
+                  <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{item.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Target Exam */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              2. Canadian Immigration Target Exam
+              3. Canadian Immigration Target Exam
             </label>
             <div className="grid grid-cols-3 gap-2">
               {[
@@ -179,7 +209,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Target Timeline */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              3. Target Exam Timeline
+              4. Target Exam Timeline
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
@@ -208,7 +238,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Daily Commitment */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              4. Daily Time Commitment
+              5. Daily Time Commitment
             </label>
             <div className="grid grid-cols-4 gap-2">
               {[
@@ -236,7 +266,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Formats */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              5. Preferred Learning Formats
+              6. Preferred Learning Formats
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -269,7 +299,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Starting Level */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              6. Starting Baseline Level
+              7. Starting Baseline Level
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
