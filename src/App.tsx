@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { DailyMission } from './components/DailyMission';
 import { RoadmapView } from './components/RoadmapView';
@@ -8,6 +8,7 @@ import { ResourceCatalog } from './components/ResourceCatalog';
 import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { DiagnosticQuiz } from './components/DiagnosticQuiz';
 import { OnboardingModal } from './components/OnboardingModal';
+import { HelpGuideModal } from './components/HelpGuideModal';
 import { getActiveProfile, decodeSharedProfile, createNewProfile } from './engine/storage';
 import { UserProfile } from './types/preferences';
 import { CEFRLevel } from './types/curriculum';
@@ -20,6 +21,7 @@ export function App() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isDiagnosticModalOpen, setIsDiagnosticModalOpen] = useState(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   // Check URL parameters for shared plan
   useEffect(() => {
@@ -34,7 +36,6 @@ export function App() {
           decoded.preferences
         );
         setActiveProfileState(friendProfile);
-        // Clear search params cleanly
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
@@ -59,6 +60,7 @@ export function App() {
         activeProfile={activeProfile}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenDiagnosticModal={() => setIsDiagnosticModalOpen(true)}
+        onOpenHelpModal={() => setIsHelpModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -122,6 +124,15 @@ export function App() {
         onClose={() => setIsOnboardingModalOpen(false)}
         activeProfile={activeProfile}
         onComplete={handleProfileRefresh}
+      />
+
+      <HelpGuideModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+        onNavigateTab={(tab) => {
+          setIsHelpModalOpen(false);
+          setActiveTab(tab);
+        }}
       />
 
     </div>

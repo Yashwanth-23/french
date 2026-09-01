@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   Circle, 
@@ -9,10 +9,10 @@ import {
   Play, 
   Pause, 
   RotateCcw, 
-  Sparkles, 
   Zap,
   Info,
-  Calendar
+  Calendar,
+  Layers
 } from 'lucide-react';
 import { UserProfile } from '../types/preferences';
 import { generateDailyPlan, calculateEstimatedTargetDate } from '../engine/recommender';
@@ -36,7 +36,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
     activeProfile.preferences.dailyTimeMinutes
   );
 
-  // Timer State for active task
+  // Active Timer State
   const [activeTimerTaskId, setActiveTimerTaskId] = useState<string | null>(null);
   const [timerSecondsRemaining, setTimerSecondsRemaining] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
@@ -49,7 +49,6 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
       }, 1000);
     } else if (timerSecondsRemaining === 0 && isTimerRunning) {
       setIsTimerRunning(false);
-      // Play a subtle alert or alert user
       if (activeTimerTaskId) {
         handleToggleTask(activeTimerTaskId);
       }
@@ -71,7 +70,6 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
         ? currentDone.filter(id => id !== taskId)
         : [...currentDone, taskId];
 
-      // If all tasks done, increment streak
       let nextStreak = prev.streakDays;
       if (nextDone.length === plan.tasks.length && !isAlreadyDone) {
         nextStreak += 1;
@@ -98,24 +96,24 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* Header Banner with Target Exam Tracker */}
+      {/* Header Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-950/60 via-slate-900 to-indigo-950/60 border border-slate-800 p-6 shadow-xl">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-sky-500/10 blur-3xl pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30">
                 {plan.phaseSummary}
               </span>
               <span className="text-xs text-slate-400 font-mono">
-                {activeProfile.preferences.dailyTimeMinutes} min/day allocation
+                {activeProfile.preferences.dailyTimeMinutes} min budget
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight">
               Today's Tailored Mission
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
-              Sequenced by your format preferences ({activeProfile.preferences.preferredFormats.join(', ')}) with enforced active output minimums.
+              Distinct skill sequence with enforced active production and spaced repetition floors.
             </p>
           </div>
 
@@ -139,7 +137,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
         <div className="mt-5 pt-4 border-t border-slate-800/80">
           <div className="flex justify-between items-center text-xs mb-1.5 font-medium">
             <span className="text-slate-300">
-              Daily Completion: <strong className="text-white">{completedCount} of {plan.tasks.length} tasks done</strong>
+              Daily Progress: <strong className="text-white">{completedCount} of {plan.tasks.length} tasks completed</strong>
             </span>
             <span className="text-sky-400 font-mono font-bold">{progressPercent}%</span>
           </div>
@@ -198,7 +196,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
             <Zap className="w-4 h-4 text-amber-400" />
             <span>Today's Task Sequence ({plan.totalMinutes} min total)</span>
           </h2>
-          <span className="text-xs text-slate-400">Checked items save automatically to your streak</span>
+          <span className="text-xs text-slate-400">Completed items update streak automatically</span>
         </div>
 
         <div className="grid grid-cols-1 gap-3.5">
@@ -216,7 +214,8 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  {/* Checkbox and Title */}
+                  
+                  {/* Checkbox and Task Details */}
                   <div className="flex items-start space-x-3.5 flex-1">
                     <button
                       onClick={() => handleToggleTask(task.id)}
@@ -230,10 +229,12 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
                       )}
                     </button>
 
-                    <div className="space-y-1 flex-1">
+                    <div className="space-y-1.5 flex-1">
+                      
+                      {/* Action Title & Badges */}
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-xs text-slate-500">0{index + 1}.</span>
-                        <h3 className={`text-sm sm:text-base font-semibold ${isCompleted ? 'line-through text-slate-400' : 'text-white'}`}>
+                        <h3 className={`text-sm sm:text-base font-bold ${isCompleted ? 'line-through text-slate-400' : 'text-white'}`}>
                           {task.title}
                         </h3>
                         
@@ -251,12 +252,18 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
                         )}
                       </div>
 
-                      {/* Instructions */}
+                      {/* Source Resource Subtitle */}
+                      <div className="text-xs text-slate-400 font-mono flex items-center space-x-1">
+                        <span>Source:</span>
+                        <span className="text-slate-300 font-semibold">{task.resourceTitle}</span>
+                      </div>
+
+                      {/* Specific Instructions */}
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed pt-0.5">
                         {task.instructions}
                       </p>
 
-                      {/* Indian Learner Linguistic Bridge Note */}
+                      {/* Tailored Indian Learner Note */}
                       {task.notesForIndianLearner && (
                         <div className="mt-2.5 flex items-start space-x-2 p-2.5 rounded-lg bg-sky-950/40 border border-sky-500/20 text-sky-200 text-xs">
                           <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
@@ -268,7 +275,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
                     </div>
                   </div>
 
-                  {/* Actions: Launch Resource & Start Timer */}
+                  {/* Right Actions: Timer & Resource Link */}
                   <div className="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                     <div className="flex items-center space-x-1 text-xs font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800">
                       <Clock className="w-3.5 h-3.5 text-sky-400" />
@@ -309,7 +316,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
         </div>
       </div>
 
-      {/* Quick Access Action Bar */}
+      {/* Quick Navigation Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
         <button
           onClick={() => onNavigateToTab('bridges')}
@@ -330,7 +337,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
             <span>TEF / TCF Strategy Vault</span>
             <span className="group-hover:translate-x-1 transition-transform">→</span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">Official FEI/CCIP sample papers, Section A/B speaking formulas.</p>
+          <p className="text-xs text-slate-400 mt-1">Official IRCC score tables, Section A/B speaking formulas.</p>
         </button>
 
         <button
