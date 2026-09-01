@@ -155,7 +155,7 @@ export function App() {
       <footer className="border-t border-slate-800/80 bg-slate-950/80 py-6 mt-12 text-center text-xs text-slate-500 font-mono">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>French TEF/TCF Canada Mastery Portal • Multi-Device Cloud Sync Ready</span>
-          <span>Targeting NCLC 7 / B2 • Indian Linguistic Bridge Model</span>
+          <span>Targeting NCLC 7 / B2 • Multilingual Cognitive Model</span>
         </div>
       </footer>
 

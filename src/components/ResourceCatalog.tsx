@@ -77,7 +77,7 @@ export const ResourceCatalog: React.FC<ResourceCatalogProps> = ({
             <span>Curated Free Resource Vault</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            14 verified free resources classified with depth tags and Indian learner structural notes.
+            20 verified free resources classified with depth tags and cognitive structural notes.
           </p>
         </div>
 
@@ -180,7 +180,7 @@ export const ResourceCatalog: React.FC<ResourceCatalogProps> = ({
 
                 {res.notesForIndianLearners && (
                   <div className="p-2.5 rounded-xl bg-sky-950/40 border border-sky-500/20 text-sky-200 text-xs">
-                    <strong className="text-sky-300">Indian Learner Insight:</strong> {res.notesForIndianLearners}
+                    <strong className="text-sky-300">Linguistic Insight:</strong> {res.notesForIndianLearners}
                   </div>
                 )}
               </div>

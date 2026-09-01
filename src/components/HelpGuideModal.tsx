@@ -48,7 +48,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({
             { id: 'overview', label: '1. Quick Start', icon: Compass },
             { id: 'missions', label: '2. Daily Missions', icon: Flame },
             { id: 'roadmap', label: '3. CEFR Roadmap', icon: Calendar },
-            { id: 'bridges', label: '4. Indian Shortcuts', icon: Languages },
+            { id: 'bridges', label: '4. Linguistic Bridges', icon: Languages },
             { id: 'exams', label: '5. TEF/TCF Prep', icon: GraduationCap },
           ].map(t => {
             const Icon = t.icon;
@@ -77,7 +77,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white">Welcome to your Canadian French Immigration Command Center</h3>
               <p>
-                This platform is engineered specifically for Indian language speakers (Telugu, Hindi, English) targeting <strong className="text-white">NCLC 7 / B2</strong> on the <strong>TEF Canada</strong> or <strong>TCF Canada</strong> exam for Express Entry.
+                This platform is engineered for global and multilingual candidates (English, Spanish, Telugu, Hindi) targeting <strong className="text-white">NCLC 7 / B2</strong> on the <strong>TEF Canada</strong> or <strong>TCF Canada</strong> exam for Express Entry.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -164,7 +164,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({
 
           {activeTab === 'bridges' && (
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white">Indian Language Linguistic Shortcuts</h3>
+              <h3 className="text-sm font-bold text-white">Multilingual Linguistic Fast-Track Shortcuts</h3>
               <p>
                 Do not translate word-for-word into English! Instead, map concepts to your multilingual intuition:
               </p>
