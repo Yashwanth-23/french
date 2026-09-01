@@ -1,8 +1,30 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { UserPreferences, UserProfile, SecondaryLanguageBridge } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
-import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw, Lock } from 'lucide-react';
-import { createCloudProfile, updateExistingProfilePreferences, checkSlugAvailable, slugify } from '../engine/dataService';
+import { 
+  Sparkles, 
+  ArrowRight, 
+  Headphones, 
+  Youtube, 
+  BookOpen, 
+  Globe, 
+  Check, 
+  AlertCircle, 
+  RefreshCw, 
+  Lock,
+  Dices,
+  Copy,
+  CheckCircle2,
+  Smartphone,
+  ExternalLink
+} from 'lucide-react';
+import { 
+  createCloudProfile, 
+  updateExistingProfilePreferences, 
+  checkSlugAvailable, 
+  slugify,
+  generateRandomHandle
+} from '../engine/dataService';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -31,6 +53,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [secondaryBridge, setSecondaryBridge] = useState<SecondaryLanguageBridge>(initialProfile?.preferences.secondaryLanguageBridge || 'none');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Success Step State
+  const [createdProfile, setCreatedProfile] = useState<UserProfile | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
   // Sync state when initialProfile changes
   useEffect(() => {
     if (initialProfile) {
@@ -46,13 +72,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
   }, [initialProfile, isOpen]);
 
-  useEffect(() => {
-    if (!isEditing && name.trim()) {
-      const candidate = slugify(name);
-      setDesiredSlug(candidate);
-    }
-  }, [name, isEditing]);
-
+  // Real-time slug availability check
   useEffect(() => {
     if (isEditing || !desiredSlug.trim()) {
       setSlugAvailable(true);
@@ -69,6 +89,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleNameChange = (newName: string) => {
+    setName(newName);
+    if (!isEditing) {
+      setDesiredSlug(slugify(newName));
+    }
+  };
+
+  const handleGenerateRandom = async () => {
+    const random = generateRandomHandle();
+    setName(random);
+    setDesiredSlug(random);
+  };
+
   const handleToggleFormat = (format: MediaFormat) => {
     setSelectedFormats(prev =>
       prev.includes(format)
@@ -80,6 +113,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || isSubmitting) return;
+
+    if (!isEditing && slugAvailable === false) {
+      alert(`Username '@${desiredSlug}' is already taken. Please choose another username.`);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -97,23 +135,121 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       if (isEditing && initialProfile) {
         // Update existing row in Supabase and preserve progress
         savedProfile = await updateExistingProfilePreferences(initialProfile, name, prefs);
+        onProfileCreated(savedProfile);
+        if (onClose) onClose();
       } else {
         // Create brand new cloud profile
         savedProfile = await createCloudProfile(name, prefs, desiredSlug);
         const newUrl = `${window.location.origin}${window.location.pathname}?user=${savedProfile.id}`;
         window.history.pushState({ path: newUrl }, '', newUrl);
-      }
 
-      onProfileCreated(savedProfile);
-      if (onClose) onClose();
-    } catch (err) {
+        // Show Post-Creation Success Screen
+        setCreatedProfile(savedProfile);
+      }
+    } catch (err: any) {
       console.error('Failed to save profile', err);
-      alert('Error saving profile. Please try again.');
+      alert(err.message || 'Error creating profile. Please try another username.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const fullAccessUrl = createdProfile
+    ? `${window.location.origin}${window.location.pathname}?user=${createdProfile.id}`
+    : '';
+
+  const handleCopyLink = () => {
+    if (fullAccessUrl) {
+      navigator.clipboard.writeText(fullAccessUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 3000);
+    }
+  };
+
+  const handleFinishAndEnter = () => {
+    if (createdProfile) {
+      onProfileCreated(createdProfile);
+      setCreatedProfile(null);
+      if (onClose) onClose();
+    }
+  };
+
+  // --- Render Success Screen ---
+  if (createdProfile) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6 text-center">
+          
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-9 h-9" />
+          </div>
+
+          <div className="space-y-1.5">
+            <h2 className="text-2xl font-extrabold text-white">Profile Created Successfully!</h2>
+            <p className="text-xs text-slate-300">
+              Welcome, <strong className="text-sky-400">@{createdProfile.id}</strong> ({createdProfile.name}). Your personalized Canadian French plan is ready.
+            </p>
+          </div>
+
+          {/* Direct Link Box */}
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 text-left">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
+              <span>Your Private Access URL</span>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                Cloud Sync Ready
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 font-mono text-xs text-sky-300 break-all select-all">
+              {fullAccessUrl}
+            </div>
+
+            <button
+              onClick={handleCopyLink}
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 ${
+                linkCopied
+                  ? 'bg-emerald-500 text-slate-950'
+                  : 'bg-sky-500 hover:bg-sky-400 text-slate-950'
+              }`}
+            >
+              {linkCopied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Link Copied to Clipboard!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  <span>Copy My Personal Access Link</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Critical Warning / Instruction Banner */}
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs text-left flex items-start space-x-2.5 leading-relaxed">
+            <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-amber-300 block mb-0.5">⚠️ Save & Bookmark This Link:</strong>
+              This URL is your personal access key. Bookmark it or message it to yourself to seamlessly resume your exact study progress and streak from any phone, laptop, or browser without needing a password.
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <button
+            onClick={handleFinishAndEnter}
+            className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-2"
+          >
+            <span>Enter Dashboard & Start Day 1 Mission</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // --- Render Creation / Edit Form ---
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
       <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -139,22 +275,44 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           
           {/* Name & Slug */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block">
-              1. Your Name / Personal Handle
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block">
+                1. Your Name / Unique Handle
+              </label>
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={handleGenerateRandom}
+                  className="flex items-center space-x-1 text-[11px] text-sky-400 hover:text-sky-300 font-semibold bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 rounded border border-sky-500/30 transition"
+                  title="Generate a unique random username like Reddit"
+                >
+                  <Dices className="w-3 h-3" />
+                  <span>🎲 Random Handle</span>
+                </button>
+              )}
+            </div>
+
             <div className="relative">
               <input
                 type="text"
-                placeholder="e.g. Yashwanth or Rahul"
+                placeholder="e.g. Yash or Rahul"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                onChange={(e) => handleNameChange(e.target.value)}
+                className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition ${
+                  !isEditing && slugAvailable === false
+                    ? 'border-rose-500 focus:border-rose-500'
+                    : 'border-slate-700 focus:border-sky-500'
+                }`}
                 required
               />
             </div>
 
-            {/* Generated Unique Access Link Preview */}
-            <div className="flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
+            {/* Generated Unique Access Link Preview & Status */}
+            <div className={`flex items-center justify-between text-[11px] font-mono px-3 py-2 rounded-lg border transition ${
+              !isEditing && slugAvailable === false
+                ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
+                : 'bg-slate-950 border-slate-800 text-slate-400'
+            }`}>
               <span className="truncate">
                 {isEditing ? (
                   <span className="flex items-center space-x-1">
@@ -162,27 +320,35 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     <span>Active Sync Key: <strong className="text-emerald-400">?user={initialProfile?.id}</strong></span>
                   </span>
                 ) : (
-                  <span>Sync Link: <strong className="text-sky-400">?user={desiredSlug}</strong></span>
+                  <span>Sync Link: <strong className={slugAvailable ? 'text-sky-400' : 'text-rose-400'}>?user={desiredSlug}</strong></span>
                 )}
               </span>
+
               {!isEditing && (
                 <span className="flex items-center space-x-1 flex-shrink-0 ml-2">
                   {isCheckingSlug ? (
                     <RefreshCw className="w-3 h-3 animate-spin text-slate-400" />
                   ) : slugAvailable === true ? (
-                    <span className="text-emerald-400 flex items-center space-x-0.5">
-                      <Check className="w-3 h-3" />
+                    <span className="text-emerald-400 flex items-center space-x-0.5 font-sans font-bold">
+                      <Check className="w-3.5 h-3.5" />
                       <span>Available</span>
                     </span>
                   ) : slugAvailable === false ? (
-                    <span className="text-amber-400 flex items-center space-x-0.5">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Taken (will add suffix)</span>
+                    <span className="text-rose-400 flex items-center space-x-0.5 font-sans font-bold">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>Already Taken — Pick Another</span>
                     </span>
                   ) : null}
                 </span>
               )}
             </div>
+
+            {/* Warning when username is taken */}
+            {!isEditing && slugAvailable === false && (
+              <p className="text-[11px] text-rose-400 font-medium">
+                ⚠️ Username <strong>'@{desiredSlug}'</strong> is already registered. Please enter a different name or click <strong>🎲 Random Handle</strong> above.
+              </p>
+            )}
           </div>
 
           {/* Example Language / Native Bridge Selector */}
@@ -197,8 +363,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               {[
                 { id: 'none', label: '🌐 English Only (Universal)', sub: 'Clean standard English (Recommended for US/Global)' },
                 { id: 'telugu', label: '🇮🇳 Telugu + English', sub: 'Adds Telugu parallels (నువ్వు/మీరు, త/ద)' },
-                { id: 'hindi', label: '🇮🇳 Hindi + English', sub: 'Adds Hindi parallels (तू/आप, त/ద, लिंग)' },
-                { id: 'tamil', label: '🇮🇳 Tamil + English', sub: 'Adds Tamil parallels (நீ/நீங்கள், த/ட)' },
+                { id: 'hindi', label: '🇮🇳 Hindi + English', sub: 'Adds Hindi parallels (तू/आप, लिंग)' },
+                { id: 'tamil', label: '🇮🇳 Tamil + English', sub: 'Adds Tamil parallels (నీ/நீங்கள்)' },
                 { id: 'spanish', label: '🇪🇸 Spanish + English', sub: 'Adds Spanish cognates (Tú/Usted)' },
               ].map(item => (
                 <button
@@ -364,17 +530,19 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Submit */}
+          {/* Submit Button */}
           <button
             type="submit"
-            disabled={!name.trim() || isSubmitting}
-            className="w-full py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs tracking-wide uppercase transition shadow-lg shadow-sky-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
+            disabled={!name.trim() || (!isEditing && slugAvailable === false) || isSubmitting}
+            className="w-full py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs tracking-wide uppercase transition shadow-lg shadow-sky-500/20 flex items-center justify-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
                 <span>Saving to Cloud Database...</span>
               </>
+            ) : !isEditing && slugAvailable === false ? (
+              <span>⚠️ Pick an Available Username to Continue</span>
             ) : (
               <>
                 <span>{isEditing ? 'Save Preferences & Refresh Queue' : 'Initialize Rolling Study Backlog'}</span>

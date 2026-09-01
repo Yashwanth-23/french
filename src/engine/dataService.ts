@@ -96,6 +96,17 @@ function profileToRow(profile: UserProfile): any {
 
 // --- Slug Generation & Collision Defense ---
 
+
+const HANDLE_ADJECTIVES = ['swift', 'fluent', 'cadet', 'zenith', 'noble', 'brave', 'cosmic', 'keen', 'prime', 'stellar', 'apex', 'vivid'];
+const HANDLE_NOUNS = ['fox', 'lynx', 'pilot', 'falcon', 'rider', 'seeker', 'sage', 'voyager', 'phoenix', 'wolf', 'tiger', 'scout'];
+
+export function generateRandomHandle(): string {
+  const adj = HANDLE_ADJECTIVES[Math.floor(Math.random() * HANDLE_ADJECTIVES.length)];
+  const noun = HANDLE_NOUNS[Math.floor(Math.random() * HANDLE_NOUNS.length)];
+  const num = Math.floor(10 + Math.random() * 90);
+  return `${adj}-${noun}-${num}`;
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -218,7 +229,12 @@ export async function createCloudProfile(
   preferences: UserPreferences,
   desiredSlug?: string
 ): Promise<UserProfile> {
-  const slug = await generateUniqueSlug(desiredSlug || name);
+  let slug = desiredSlug ? slugify(desiredSlug) : slugify(name);
+  const isAvailable = await checkSlugAvailable(slug);
+  
+  if (!isAvailable) {
+    throw new Error(`Username '@${slug}' is already taken. Please choose another name.`);
+  }
 
   const initialProfileSkeleton: UserProfile = {
     id: slug,
