@@ -166,7 +166,7 @@ export function App() {
           if (activeProfile) setIsOnboardingModalOpen(false);
         }}
         onProfileCreated={handleProfileCreatedOrUpdated}
-        isInitialSetup={!activeProfile}
+        initialProfile={activeProfile}
       />
 
       <DiagnosticQuiz

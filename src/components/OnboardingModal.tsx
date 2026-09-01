@@ -1,54 +1,71 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { UserPreferences, UserProfile, SecondaryLanguageBridge } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
-import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw, Languages } from 'lucide-react';
-import { createCloudProfile, checkSlugAvailable, slugify } from '../engine/dataService';
+import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw, Lock } from 'lucide-react';
+import { createCloudProfile, updateExistingProfilePreferences, checkSlugAvailable, slugify } from '../engine/dataService';
 
 interface OnboardingModalProps {
   isOpen: boolean;
   onClose?: () => void;
   onProfileCreated: (profile: UserProfile) => void;
-  isInitialSetup?: boolean;
+  initialProfile?: UserProfile | null;
 }
 
 export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   isOpen,
   onClose,
   onProfileCreated,
-  isInitialSetup = false
+  initialProfile = null
 }) => {
-  const [name, setName] = useState('');
-  const [desiredSlug, setDesiredSlug] = useState('');
+  const isEditing = Boolean(initialProfile);
+
+  const [name, setName] = useState(initialProfile?.name || '');
+  const [desiredSlug, setDesiredSlug] = useState(initialProfile?.id || '');
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
-  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
-  const [dailyMinutes, setDailyMinutes] = useState(120);
-  const [targetExam, setTargetExam] = useState<ExamTarget>('TEF_Canada');
-  const [selectedFormats, setSelectedFormats] = useState<MediaFormat[]>(['podcast', 'youtube']);
-  const [startingLevel, setStartingLevel] = useState<CEFRLevel>('A0');
-  const [targetMonths, setTargetMonths] = useState<number>(16);
-  const [secondaryBridge, setSecondaryBridge] = useState<SecondaryLanguageBridge>('none');
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(true);
+  const [dailyMinutes, setDailyMinutes] = useState(initialProfile?.preferences.dailyTimeMinutes || 120);
+  const [targetExam, setTargetExam] = useState<ExamTarget>(initialProfile?.preferences.targetExam || 'TEF_Canada');
+  const [selectedFormats, setSelectedFormats] = useState<MediaFormat[]>(initialProfile?.preferences.preferredFormats || ['podcast', 'youtube']);
+  const [startingLevel, setStartingLevel] = useState<CEFRLevel>(initialProfile?.preferences.startingLevel || 'A0');
+  const [targetMonths, setTargetMonths] = useState<number>(initialProfile?.preferences.targetExamDateMonths || 16);
+  const [secondaryBridge, setSecondaryBridge] = useState<SecondaryLanguageBridge>(initialProfile?.preferences.secondaryLanguageBridge || 'none');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync state when initialProfile changes
   useEffect(() => {
-    if (name.trim()) {
+    if (initialProfile) {
+      setName(initialProfile.name);
+      setDesiredSlug(initialProfile.id);
+      setDailyMinutes(initialProfile.preferences.dailyTimeMinutes);
+      setTargetExam(initialProfile.preferences.targetExam);
+      setSelectedFormats(initialProfile.preferences.preferredFormats);
+      setStartingLevel(initialProfile.preferences.startingLevel);
+      setTargetMonths(initialProfile.preferences.targetExamDateMonths || 16);
+      setSecondaryBridge(initialProfile.preferences.secondaryLanguageBridge || 'none');
+      setSlugAvailable(true);
+    }
+  }, [initialProfile, isOpen]);
+
+  useEffect(() => {
+    if (!isEditing && name.trim()) {
       const candidate = slugify(name);
       setDesiredSlug(candidate);
     }
-  }, [name]);
+  }, [name, isEditing]);
 
   useEffect(() => {
-    if (!desiredSlug.trim()) {
-      setSlugAvailable(null);
+    if (isEditing || !desiredSlug.trim()) {
+      setSlugAvailable(true);
       return;
     }
     const timer = setTimeout(async () => {
       setIsCheckingSlug(true);
-      const available = await checkSlugAvailable(desiredSlug);
+      const available = await checkSlugAvailable(desiredSlug, initialProfile?.id);
       setSlugAvailable(available);
       setIsCheckingSlug(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [desiredSlug]);
+  }, [desiredSlug, isEditing, initialProfile]);
 
   if (!isOpen) return null;
 
@@ -76,16 +93,22 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         skillFrictions: ['EO', 'Conjugation']
       };
 
-      const newProfile = await createCloudProfile(name, prefs, desiredSlug);
+      let savedProfile: UserProfile;
+      if (isEditing && initialProfile) {
+        // Update existing row in Supabase and preserve progress
+        savedProfile = await updateExistingProfilePreferences(initialProfile, name, prefs);
+      } else {
+        // Create brand new cloud profile
+        savedProfile = await createCloudProfile(name, prefs, desiredSlug);
+        const newUrl = `${window.location.origin}${window.location.pathname}?user=${savedProfile.id}`;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+      }
 
-      const newUrl = `${window.location.origin}${window.location.pathname}?user=${newProfile.id}`;
-      window.history.pushState({ path: newUrl }, '', newUrl);
-
-      onProfileCreated(newProfile);
+      onProfileCreated(savedProfile);
       if (onClose) onClose();
     } catch (err) {
-      console.error('Failed to create profile', err);
-      alert('Error creating profile. Please try another username.');
+      console.error('Failed to save profile', err);
+      alert('Error saving profile. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -99,13 +122,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         <div className="px-6 py-5 border-b border-slate-800 bg-gradient-to-r from-sky-950/40 via-slate-900 to-indigo-950/40">
           <div className="flex items-center space-x-2 text-xs uppercase font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 w-fit mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Personalized Cloud Setup</span>
+            <span>{isEditing ? `Reconfigure @${initialProfile?.id}` : 'Personalized Cloud Setup'}</span>
           </div>
           <h2 className="text-xl font-extrabold text-white">
-            {isInitialSetup ? 'Create Your Canadian French Plan' : 'Configure New Study Profile'}
+            {isEditing ? `Adjust Preferences for @${initialProfile?.id}` : 'Create Your Canadian French Plan'}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Set your pace, exam timeline, and optional native language bridges for task notes.
+          <p className="text-xs text-slate-300 mt-1">
+            {isEditing
+              ? 'Your completed tasks, lifetime study hours, and streak are 100% preserved.'
+              : 'Your custom exam timeline, formats, and task backlog will sync across your devices.'}
           </p>
         </div>
 
@@ -117,20 +142,30 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block">
               1. Your Name / Personal Handle
             </label>
-            <input
-              type="text"
-              placeholder="e.g. Yashwanth or Rahul"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
-              required
-            />
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="e.g. Yashwanth or Rahul"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                required
+              />
+            </div>
 
-            {desiredSlug && (
-              <div className="flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
-                <span className="truncate">
-                  Sync Link: <strong className="text-sky-400">?user={desiredSlug}</strong>
-                </span>
+            {/* Generated Unique Access Link Preview */}
+            <div className="flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
+              <span className="truncate">
+                {isEditing ? (
+                  <span className="flex items-center space-x-1">
+                    <Lock className="w-3 h-3 text-emerald-400" />
+                    <span>Active Sync Key: <strong className="text-emerald-400">?user={initialProfile?.id}</strong></span>
+                  </span>
+                ) : (
+                  <span>Sync Link: <strong className="text-sky-400">?user={desiredSlug}</strong></span>
+                )}
+              </span>
+              {!isEditing && (
                 <span className="flex items-center space-x-1 flex-shrink-0 ml-2">
                   {isCheckingSlug ? (
                     <RefreshCw className="w-3 h-3 animate-spin text-slate-400" />
@@ -146,8 +181,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     </span>
                   ) : null}
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Example Language / Native Bridge Selector */}
@@ -156,7 +191,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               2. Example Notes & Linguistic Bridge (English is default)
             </label>
             <p className="text-[11px] text-slate-400 mb-2">
-              All explanations are in clean English. You can optionally add native language parallels:
+              All explanations are in clean English. Select an optional native parallel:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
@@ -342,7 +377,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </>
             ) : (
               <>
-                <span>Initialize Rolling Study Backlog</span>
+                <span>{isEditing ? 'Save Preferences & Refresh Queue' : 'Initialize Rolling Study Backlog'}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

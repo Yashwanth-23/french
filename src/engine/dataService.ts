@@ -91,7 +91,11 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, '') || 'learner';
 }
 
-export async function checkSlugAvailable(slug: string): Promise<boolean> {
+export async function checkSlugAvailable(slug: string, currentEditingId?: string): Promise<boolean> {
+  if (currentEditingId && slug === currentEditingId) {
+    return true; // You own this slug!
+  }
+
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -115,7 +119,6 @@ export async function generateUniqueSlug(baseName: string): Promise<string> {
   let isAvailable = await checkSlugAvailable(candidate);
   if (isAvailable) return candidate;
 
-  // Try appending numbers or short hash
   let counter = 2;
   while (counter < 20) {
     const nextCandidate = `${candidate}-${counter}`;
@@ -125,7 +128,6 @@ export async function generateUniqueSlug(baseName: string): Promise<string> {
     counter++;
   }
 
-  // Fallback random suffix
   const randomSuffix = Math.random().toString(36).substring(2, 6);
   return `${candidate}-${randomSuffix}`;
 }
@@ -151,15 +153,6 @@ export async function fetchProfile(slug: string): Promise<UserProfile | null> {
         saveLocalBackupProfiles(local);
         localStorage.setItem(ACTIVE_SLUG_KEY, slug);
         return profile;
-      } else {
-        // If not found in cloud, purge from local backup cache
-        const local = getLocalBackupProfiles();
-        delete local[slug];
-        saveLocalBackupProfiles(local);
-        if (localStorage.getItem(ACTIVE_SLUG_KEY) === slug) {
-          localStorage.removeItem(ACTIVE_SLUG_KEY);
-        }
-        return null;
       }
     } catch (err) {
       console.warn('Supabase fetch error', err);
@@ -182,7 +175,7 @@ export async function saveProfileToCloud(profile: UserProfile): Promise<UserProf
     updatedAt: new Date().toISOString()
   };
 
-  // 1. Save to Local Cache immediately
+  // 1. Save to Local Cache
   const local = getLocalBackupProfiles();
   local[profile.id] = updatedProfile;
   saveLocalBackupProfiles(local);
@@ -233,6 +226,28 @@ export async function createCloudProfile(
   initialProfileSkeleton.activeTaskQueue = generatedPlan.tasks;
 
   return await saveProfileToCloud(initialProfileSkeleton);
+}
+
+// Update existing profile WITHOUT erasing progress
+export async function updateExistingProfilePreferences(
+  existingProfile: UserProfile,
+  updatedName: string,
+  updatedPreferences: UserPreferences
+): Promise<UserProfile> {
+  const updatedProfileSkeleton: UserProfile = {
+    ...existingProfile,
+    name: updatedName.trim(),
+    tagline: `${(updatedPreferences.dailyTimeMinutes / 60).toFixed(1)}h / Day • ${updatedPreferences.targetExam.replace('_', ' ')} Focus`,
+    preferences: updatedPreferences,
+    currentMilestoneId: `milestone-${updatedPreferences.startingLevel.toLowerCase()}`
+    // Notice: totalMinutesLogged, completedHistory, streakDays, and bookmarks are 100% PRESERVED!
+  };
+
+  // Generate refreshed queue matching new format/time/language preferences
+  const generatedPlan = generateDailyPlan(updatedProfileSkeleton);
+  updatedProfileSkeleton.activeTaskQueue = generatedPlan.tasks;
+
+  return await saveProfileToCloud(updatedProfileSkeleton);
 }
 
 export async function completeTaskAndLog(slug: string, taskId: string): Promise<UserProfile | null> {
@@ -322,10 +337,4 @@ export function getActiveSlugFromUrlOrStorage(): string | null {
   const urlUser = params.get('user');
   if (urlUser) return urlUser;
   return localStorage.getItem(ACTIVE_SLUG_KEY);
-}
-
-export function clearActiveProfile(): void {
-  localStorage.removeItem(ACTIVE_SLUG_KEY);
-  localStorage.removeItem(LOCAL_BACKUP_KEY);
-  window.history.replaceState({}, document.title, window.location.pathname);
 }
