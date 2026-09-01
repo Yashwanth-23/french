@@ -144,15 +144,23 @@ export async function fetchProfile(slug: string): Promise<UserProfile | null> {
 
       if (data && !error) {
         const profile = rowToProfile(data);
-        // Cache locally
         const local = getLocalBackupProfiles();
         local[slug] = profile;
         saveLocalBackupProfiles(local);
         localStorage.setItem(ACTIVE_SLUG_KEY, slug);
         return profile;
+      } else {
+        // If not found in cloud, purge from local backup cache
+        const local = getLocalBackupProfiles();
+        delete local[slug];
+        saveLocalBackupProfiles(local);
+        if (localStorage.getItem(ACTIVE_SLUG_KEY) === slug) {
+          localStorage.removeItem(ACTIVE_SLUG_KEY);
+        }
+        return null;
       }
     } catch (err) {
-      console.warn('Supabase fetch failed, checking local backup cache', err);
+      console.warn('Supabase fetch error', err);
     }
   }
 
@@ -204,7 +212,6 @@ export async function createCloudProfile(
 ): Promise<UserProfile> {
   const slug = desiredSlug ? slugify(desiredSlug) : await generateUniqueSlug(name);
 
-  // Initial dummy profile to feed to recommender
   const initialProfileSkeleton: UserProfile = {
     id: slug,
     name: name.trim(),
@@ -220,7 +227,6 @@ export async function createCloudProfile(
     bookmarkedResourceIds: []
   };
 
-  // Generate initial rolling task backlog matching user preferences
   const generatedPlan = generateDailyPlan(initialProfileSkeleton);
   initialProfileSkeleton.activeTaskQueue = generatedPlan.tasks;
 
@@ -236,7 +242,6 @@ export async function completeTaskAndLog(slug: string, taskId: string): Promise<
 
   const task = profile.activeTaskQueue[taskIndex];
 
-  // Create permanent Study Log Entry
   const logEntry: StudyLogEntry = {
     id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     taskId: task.id,
@@ -247,12 +252,10 @@ export async function completeTaskAndLog(slug: string, taskId: string): Promise<
     completedAt: new Date().toISOString()
   };
 
-  // Remove from active queue or mark completed
   const nextQueue = profile.activeTaskQueue.filter(t => t.id !== taskId);
   const nextHistory = [logEntry, ...(profile.completedHistory || [])];
   const nextMinutes = (profile.totalMinutesLogged || 0) + task.durationMinutes;
 
-  // Compute streak
   const todayStr = new Date().toISOString().split('T')[0];
   let nextStreak = profile.streakDays || 1;
   if (profile.lastActiveDate !== todayStr) {
@@ -275,7 +278,6 @@ export async function appendBonusTasksInCloud(slug: string, additionalMinutes: n
   const profile = await fetchProfile(slug);
   if (!profile) return null;
 
-  // Create temporary profile with requested duration
   const tempProfile: UserProfile = {
     ...profile,
     preferences: {
@@ -286,7 +288,6 @@ export async function appendBonusTasksInCloud(slug: string, additionalMinutes: n
 
   const newPlan = generateDailyPlan(tempProfile);
 
-  // Append new tasks with unique IDs
   const bonusTasks = newPlan.tasks.map((t, idx) => ({
     ...t,
     id: `task-bonus-${Date.now()}-${idx + 1}`,
@@ -321,6 +322,8 @@ export function getActiveSlugFromUrlOrStorage(): string | null {
   return localStorage.getItem(ACTIVE_SLUG_KEY);
 }
 
-export function setActiveSlug(slug: string): void {
-  localStorage.setItem(ACTIVE_SLUG_KEY, slug);
+export function clearActiveProfile(): void {
+  localStorage.removeItem(ACTIVE_SLUG_KEY);
+  localStorage.removeItem(LOCAL_BACKUP_KEY);
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
