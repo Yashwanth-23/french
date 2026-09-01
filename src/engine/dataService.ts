@@ -33,6 +33,30 @@ function saveLocalBackupProfiles(profiles: Record<string, UserProfile>): void {
 }
 
 // Convert DB row to UserProfile
+
+const LEGACY_URL_FIXES: Record<string, string> = {
+  'https://www.youtube.com/watch?v=sU1H4hT_hH8': 'https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un',
+  'https://www.youtube.com/@frenchsounds': 'https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un',
+  'https://leconjugueur.lefigaro.fr/conjugaison/du/verbe/etre.html': 'https://leconjugueur.lefigaro.fr/conjugaison/verbe/etre.html',
+  'https://www.youtube.com/@WanderingFrench': 'https://www.youtube.com/results?search_query=Wandering+French+Quebecois+pronunciation+rules',
+  'https://www.youtube.com/@FrenchSchoolTV': 'https://www.youtube.com/results?search_query=French+School+TV+TEF+Expression+Orale+Section+A',
+  'https://www.youtube.com/watch?v=1b-3i_bH1s0': 'https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself',
+  'https://www.youtube.com/@EasyFrench': 'https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself'
+};
+
+function sanitizeTaskQueue(tasks: any[]): DailyTask[] {
+  if (!Array.isArray(tasks)) return [];
+  return tasks.map(t => {
+    if (t.resourceUrl && LEGACY_URL_FIXES[t.resourceUrl]) {
+      return {
+        ...t,
+        resourceUrl: LEGACY_URL_FIXES[t.resourceUrl]
+      };
+    }
+    return t;
+  });
+}
+
 function rowToProfile(row: any): UserProfile {
   let preferredFormats: MediaFormat[] = ['podcast', 'youtube'];
   let secondaryLanguageBridge: SecondaryLanguageBridge = 'none';
@@ -59,7 +83,7 @@ function rowToProfile(row: any): UserProfile {
     },
     currentMilestoneId: row.current_milestone_id || 'milestone-a0',
     completedMilestoneIds: row.completed_milestone_ids || [],
-    activeTaskQueue: row.active_task_queue || [],
+    activeTaskQueue: sanitizeTaskQueue(row.active_task_queue || []),
     completedHistory: row.completed_history || [],
     totalMinutesLogged: row.total_minutes_logged || 0,
     streakDays: row.streak_days || 0,
