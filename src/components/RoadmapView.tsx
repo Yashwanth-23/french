@@ -1,23 +1,23 @@
-import React from 'react';
+﻿import React from 'react';
 import { 
+  Calendar, 
   CheckCircle2, 
   Circle, 
-  Lock, 
+  ArrowRight, 
   Clock, 
-  Award, 
-  ChevronRight, 
+  Sparkles, 
+  Flame, 
   BookOpen, 
-  Sparkles,
-  Layers,
-  ArrowUpRight
+  ExternalLink,
+  Layers
 } from 'lucide-react';
 import milestonesData from '../data/milestones.json';
 import { Milestone, CEFRLevel } from '../types/curriculum';
 import { UserProfile } from '../types/preferences';
-import { updateActiveProfile } from '../engine/storage';
+import { saveProfileToCloud } from '../engine/dataService';
 
 interface RoadmapViewProps {
-  activeProfile: UserProfile;
+  activeProfile: UserProfile | null;
   onProfileUpdate: () => void;
   onOpenResource: (resourceId: string) => void;
 }
@@ -28,184 +28,152 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
   onOpenResource
 }) => {
   const milestones = milestonesData as Milestone[];
-  const currentMilestoneIndex = milestones.findIndex(m => m.id === activeProfile.currentMilestoneId);
+  const currentMilestoneId = activeProfile?.currentMilestoneId || 'milestone-a0';
+  const completedMilestoneIds = activeProfile?.completedMilestoneIds || [];
 
-  const handleSetCurrentMilestone = (milestoneId: string) => {
-    updateActiveProfile(prev => ({
-      ...prev,
+  const handleSelectMilestone = async (milestoneId: string) => {
+    if (!activeProfile) return;
+    const updated: UserProfile = {
+      ...activeProfile,
       currentMilestoneId: milestoneId
-    }));
+    };
+    await saveProfileToCloud(updated);
     onProfileUpdate();
   };
 
-  const handleToggleCompleted = (milestoneId: string, e: React.MouseEvent) => {
+  const handleToggleCompleteMilestone = async (milestoneId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    updateActiveProfile(prev => {
-      const completed = prev.completedMilestoneIds || [];
-      const nextCompleted = completed.includes(milestoneId)
-        ? completed.filter(id => id !== milestoneId)
-        : [...completed, milestoneId];
-      return {
-        ...prev,
-        completedMilestoneIds: nextCompleted
-      };
-    });
+    if (!activeProfile) return;
+    const isCompleted = completedMilestoneIds.includes(milestoneId);
+    const nextCompleted = isCompleted
+      ? completedMilestoneIds.filter(id => id !== milestoneId)
+      : [...completedMilestoneIds, milestoneId];
+
+    const updated: UserProfile = {
+      ...activeProfile,
+      completedMilestoneIds: nextCompleted
+    };
+    await saveProfileToCloud(updated);
     onProfileUpdate();
   };
 
-  const totalCurriculumHours = milestones.reduce((sum, m) => sum + m.targetHoursFloor, 0);
+  const totalHours = milestones.reduce((sum, m) => sum + m.targetHoursFloor, 0);
 
   return (
     <div className="space-y-6">
       
-      {/* Header */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header Banner */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-sky-950/60 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="text-xs uppercase font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              Mastery Pipeline
+            <span className="text-xs uppercase font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold">
+              Pedagogical Framework
             </span>
-            <span className="text-xs text-slate-400 font-mono">
-              Total Hours Floor: ~{totalCurriculumHours} Hours
-            </span>
+            <span className="text-xs text-slate-400 font-mono">~{totalHours} Total Hours Floor</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
-            CEFR Progression Map (A0 → B2 TEF Canada)
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight">
+            CEFR A0 → B2 Master Pipeline
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-            Each milestone sets explicit grammatical and active production thresholds. Click any phase to set it as your active plan.
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
+            Designed for non-Romance native speakers. Click any phase card to calibrate your active milestone.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-300">
-          <div className="w-3 h-3 rounded-full bg-sky-400 animate-pulse"></div>
-          <span>Active Phase: <strong className="text-white">{milestones[currentMilestoneIndex]?.level}</strong></span>
+        <div className="flex items-center space-x-3 bg-slate-900/90 border border-slate-700/80 rounded-2xl p-3 px-4 shadow-lg text-center">
+          <div>
+            <div className="text-[10px] uppercase font-semibold text-slate-400">Milestones Done</div>
+            <div className="text-xl font-extrabold text-indigo-400 font-mono">
+              {completedMilestoneIds.length} / {milestones.length}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Roadmap Tree */}
-      <div className="relative pl-4 sm:pl-8 space-y-8 before:absolute before:left-6 sm:before:left-10 before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-800">
-        {milestones.map((milestone, idx) => {
-          const isCurrent = milestone.id === activeProfile.currentMilestoneId;
-          const isCompleted = (activeProfile.completedMilestoneIds || []).includes(milestone.id);
-          const isUnlocked = idx <= currentMilestoneIndex || isCompleted;
+      <div className="space-y-4">
+        {milestones.map((m, idx) => {
+          const isCurrent = m.id === currentMilestoneId;
+          const isDone = completedMilestoneIds.includes(m.id);
 
           return (
             <div
-              key={milestone.id}
-              onClick={() => handleSetCurrentMilestone(milestone.id)}
-              className={`relative rounded-2xl border p-5 sm:p-6 cursor-pointer transition-all ${
+              key={m.id}
+              onClick={() => handleSelectMilestone(m.id)}
+              className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-md ${
                 isCurrent
-                  ? 'bg-slate-900/90 border-sky-500 shadow-xl shadow-sky-500/10 ring-1 ring-sky-500/30'
-                  : isCompleted
-                  ? 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
-                  : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
+                  ? 'bg-slate-900/95 border-sky-500 shadow-sky-500/10 ring-1 ring-sky-500/50'
+                  : isDone
+                  ? 'bg-slate-900/40 border-slate-800 opacity-80'
+                  : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
               }`}
             >
-              {/* Timeline Marker Node */}
-              <div
-                className={`absolute -left-7 sm:-left-11 top-6 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                  isCompleted
-                    ? 'bg-emerald-500 border-emerald-400 text-slate-950'
-                    : isCurrent
-                    ? 'bg-sky-500 border-sky-300 text-slate-950 shadow-md shadow-sky-500/50'
-                    : 'bg-slate-900 border-slate-700 text-slate-500'
-                }`}
-              >
-                {isCompleted ? (
-                  <CheckCircle2 className="w-4 h-4 stroke-[3]" />
-                ) : (
-                  <span className="text-[10px] font-bold font-mono">{idx}</span>
-                )}
-              </div>
-
-              {/* Card Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
-                <div className="flex items-center space-x-3">
-                  <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded-md ${
-                    isCurrent ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-300'
-                  }`}>
-                    {milestone.level}
-                  </span>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-bold text-white">
-                      {milestone.title}
-                    </h2>
-                    <span className="text-xs text-slate-400 font-medium">{milestone.phaseLabel}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-mono bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                    <Clock className="w-3.5 h-3.5 text-amber-400" />
-                    <span>~{milestone.targetHoursFloor}h target</span>
-                  </div>
-
-                  <button
-                    onClick={(e) => handleToggleCompleted(milestone.id, e)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                      isCompleted
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                        : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
-                    }`}
-                  >
-                    {isCompleted ? 'Completed ✓' : 'Mark Done'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="text-xs sm:text-sm text-slate-300 mt-3 leading-relaxed">
-                {milestone.description}
-              </p>
-
-              {/* Key Grammar Points & Active Requirements */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-3 border-t border-slate-800/80">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 
-                {/* Grammar Checkpoints */}
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-sky-400 mb-2 flex items-center space-x-1.5">
-                    <Layers className="w-3.5 h-3.5" />
-                    <span>Core Grammar Pillars</span>
-                  </h4>
-                  <ul className="space-y-1.5">
-                    {milestone.grammarKeypoints.map((point, pIdx) => (
-                      <li key={pIdx} className="text-xs text-slate-300 flex items-start space-x-2">
-                        <span className="text-sky-500 font-bold">•</span>
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="flex items-start space-x-4 flex-1">
+                  <button
+                    onClick={(e) => handleToggleCompleteMilestone(m.id, e)}
+                    className="mt-1 text-slate-500 hover:text-emerald-400 transition"
+                    title={isDone ? 'Mark milestone incomplete' : 'Mark milestone completed'}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="w-6 h-6 text-emerald-400 fill-emerald-400/20" />
+                    ) : (
+                      <Circle className="w-6 h-6 text-slate-600" />
+                    )}
+                  </button>
+
+                  <div className="space-y-2 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs text-slate-500">0{idx + 1}.</span>
+                      <span className="font-bold text-xs uppercase px-2 py-0.5 rounded bg-slate-800 text-sky-400 border border-slate-700">
+                        {m.level}
+                      </span>
+                      <h3 className="text-base font-bold text-white">{m.phaseLabel}</h3>
+
+                      {isCurrent && (
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                          Active Phase
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      {m.description}
+                    </p>
+
+                    {/* Checkpoints */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                      <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+                        <div className="text-[11px] font-bold text-sky-400 mb-1">Grammar Pillars</div>
+                        <ul className="text-xs text-slate-300 space-y-1">
+                          {m.grammarCheckpoints.map((g, i) => (
+                            <li key={i} className="flex items-center space-x-1.5">
+                              <span className="text-sky-500 font-bold">•</span>
+                              <span>{g}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+                        <div className="text-[11px] font-bold text-emerald-400 mb-1">Active Output Goal</div>
+                        <p className="text-xs text-slate-300">
+                          {m.speakingBenchmark}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Active Requirements */}
-                <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2 flex items-center space-x-1.5">
-                    <Award className="w-3.5 h-3.5" />
-                    <span>Active Output Benchmarks</span>
-                  </h4>
-                  <ul className="space-y-1.5">
-                    {milestone.activeRequirements.map((req, rIdx) => (
-                      <li key={rIdx} className="text-xs text-slate-300 flex items-start space-x-2">
-                        <span className="text-emerald-500 font-bold">✓</span>
-                        <span>{req}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="text-right font-mono flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0 border-slate-800">
+                  <div className="text-xs text-slate-400 flex items-center space-x-1">
+                    <Clock className="w-3.5 h-3.5 text-sky-400" />
+                    <span className="text-white font-bold">~{m.targetHoursFloor}h</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-1">Non-Romance floor</div>
                 </div>
 
               </div>
-
-              {/* Active Milestone Indicator */}
-              {isCurrent && (
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-sky-400 font-medium">
-                  <span>Current Active Curriculum Focus</span>
-                  <span className="flex items-center space-x-1">
-                    <span>Generated Daily in "Today's Mission"</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              )}
             </div>
           );
         })}

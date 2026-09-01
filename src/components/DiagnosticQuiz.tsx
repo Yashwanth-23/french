@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, XCircle, ArrowRight, RotateCcw, X } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { Sparkles, CheckCircle2, AlertCircle, ArrowRight, X, RotateCcw } from 'lucide-react';
 import diagnosticQuestions from '../data/diagnostic.json';
-import { DiagnosticQuestion, CEFRLevel } from '../types/curriculum';
-import { updateActiveProfile } from '../engine/storage';
+import { CEFRLevel } from '../types/curriculum';
 
 interface DiagnosticQuizProps {
   isOpen: boolean;
   onClose: () => void;
-  onCalibrationComplete: (calibratedLevel: CEFRLevel) => void;
+  onCalibrationComplete: (level: CEFRLevel) => void;
 }
 
 export const DiagnosticQuiz: React.FC<DiagnosticQuizProps> = ({
@@ -15,192 +14,140 @@ export const DiagnosticQuiz: React.FC<DiagnosticQuizProps> = ({
   onClose,
   onCalibrationComplete
 }) => {
-  const questions = diagnosticQuestions as DiagnosticQuestion[];
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>(new Array(questions.length).fill(-1));
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [isFinished, setIsFinished] = useState(false);
 
   if (!isOpen) return null;
 
-  const currentQ = questions[currentIndex];
-  const answeredCount = selectedAnswers.filter(a => a !== -1).length;
+  const questions = diagnosticQuestions;
+  const currentQ = questions[currentQuestionIndex];
 
-  const handleSelectOption = (optIndex: number) => {
-    const updated = [...selectedAnswers];
-    updated[currentIndex] = optIndex;
-    setSelectedAnswers(updated);
+  const handleSelectOption = (optionIndex: number) => {
+    setSelectedAnswers(prev => ({
+      ...prev,
+      [currentQuestionIndex]: optionIndex
+    }));
   };
 
   const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
     } else {
       setIsFinished(true);
     }
   };
 
-  const handlePrev = () => {
-    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
-  };
-
-  const calculateScoreAndLevel = (): { score: number; level: CEFRLevel; label: string } => {
-    let score = 0;
-    selectedAnswers.forEach((ans, idx) => {
-      if (ans === questions[idx].correctIndex) score++;
+  const calculateScoreAndLevel = (): { score: number; level: CEFRLevel } => {
+    let totalScore = 0;
+    questions.forEach((q, idx) => {
+      if (selectedAnswers[idx] === q.correctAnswerIndex) {
+        totalScore += q.points;
+      }
     });
 
-    let level: CEFRLevel = 'A0';
-    let label = 'Phase 0: Phonetic Foundation (True Beginner)';
+    let diagnosedLevel: CEFRLevel = 'A0';
+    if (totalScore >= 70) diagnosedLevel = 'B2';
+    else if (totalScore >= 50) diagnosedLevel = 'B1';
+    else if (totalScore >= 30) diagnosedLevel = 'A2';
+    else if (totalScore >= 15) diagnosedLevel = 'A1';
 
-    if (score >= 7) {
-      level = 'B2';
-      label = 'Phase 4: B2 TEF/TCF Exam Precision Track';
-    } else if (score >= 5) {
-      level = 'B1';
-      label = 'Phase 3: B1 Independent Fluency & News Auditory Parsing';
-    } else if (score >= 3) {
-      level = 'A2';
-      label = 'Phase 2: A2 Narrative & Vocal Shadowing Track';
-    } else if (score >= 1) {
-      level = 'A1';
-      label = 'Phase 1: A1 Grammar Foundations & Lexicon';
-    }
-
-    return { score, level, label };
+    return { score: totalScore, level: diagnosedLevel };
   };
 
-  const handleApplyCalibration = () => {
-    const { level, score } = calculateScoreAndLevel();
-    updateActiveProfile(prev => ({
-      ...prev,
-      currentMilestoneId: `milestone-${level.toLowerCase()}`,
-      diagnosticScore: score
-    }));
+  const handleApplyResult = () => {
+    const { level } = calculateScoreAndLevel();
     onCalibrationComplete(level);
     onClose();
   };
 
+  const { score, level } = calculateScoreAndLevel();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/80">
+        <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Sparkles className="w-5 h-5 text-amber-400" />
-            <h2 className="text-base font-bold text-white">CEFR Level Diagnostic & Calibration</h2>
+            <h3 className="text-base font-bold text-white">CEFR Level Diagnostic</h3>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
+        {/* Body */}
         <div className="p-6">
           {!isFinished ? (
-            <div className="space-y-5">
-              {/* Progress */}
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Question {currentIndex + 1} of {questions.length}</span>
-                <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-sky-400">
-                  Target: {currentQ.level} ({currentQ.skill})
-                </span>
+            <div className="space-y-4">
+              <div className="flex justify-between text-xs text-slate-400 font-mono">
+                <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
+                <span className="text-amber-400">Target Level: {currentQ.levelTested}</span>
               </div>
 
-              {/* Question */}
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
-                <p className="text-sm font-medium text-slate-100 leading-relaxed">
-                  {currentQ.question}
-                </p>
-              </div>
+              <h4 className="text-sm font-bold text-white leading-snug">
+                {currentQ.question}
+              </h4>
 
-              {/* Options */}
-              <div className="space-y-2">
+              <div className="space-y-2 pt-2">
                 {currentQ.options.map((opt, optIdx) => {
-                  const isChosen = selectedAnswers[currentIndex] === optIdx;
+                  const isSelected = selectedAnswers[currentQuestionIndex] === optIdx;
                   return (
                     <button
                       key={optIdx}
                       onClick={() => handleSelectOption(optIdx)}
                       className={`w-full text-left p-3 rounded-xl border text-xs font-medium transition ${
-                        isChosen
-                          ? 'bg-sky-500/20 border-sky-500 text-sky-200'
-                          : 'bg-slate-800/60 border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:border-slate-600'
+                        isSelected
+                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-sm'
+                          : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
                       }`}
                     >
-                      <span className="font-mono text-slate-500 mr-2">[{String.fromCharCode(65 + optIdx)}]</span>
-                      <span>{opt}</span>
+                      {opt}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Controls */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-                <button
-                  onClick={handlePrev}
-                  disabled={currentIndex === 0}
-                  className="px-3 py-1.5 text-xs text-slate-400 hover:text-white disabled:opacity-30"
-                >
-                  Previous
-                </button>
+              <div className="pt-4 flex justify-end">
                 <button
                   onClick={handleNext}
-                  disabled={selectedAnswers[currentIndex] === -1}
-                  className="flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-semibold disabled:opacity-40 transition"
+                  disabled={selectedAnswers[currentQuestionIndex] === undefined}
+                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition disabled:opacity-40"
                 >
-                  <span>{currentIndex === questions.length - 1 ? 'Finish & Evaluate' : 'Next Question'}</span>
+                  <span>{currentQuestionIndex === questions.length - 1 ? 'Finish Test' : 'Next Question'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           ) : (
-            /* Results Screen */
-            <div className="space-y-5 text-center">
-              {(() => {
-                const { score, level, label } = calculateScoreAndLevel();
-                return (
-                  <>
-                    <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-sky-500 flex items-center justify-center shadow-lg shadow-sky-500/20 text-white font-bold text-xl">
-                      {level}
-                    </div>
+            <div className="text-center py-4 space-y-4">
+              <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-wider text-slate-400 font-mono">Diagnostic Result</div>
+                <div className="text-3xl font-black text-white mt-1 font-mono">Calibrated Level: {level}</div>
+                <div className="text-xs text-slate-400 mt-1 font-mono">Raw Score: {score} / 80 points</div>
+              </div>
 
-                    <div>
-                      <h3 className="text-lg font-bold text-white">Diagnostic Score: {score} / {questions.length}</h3>
-                      <p className="text-xs text-sky-400 font-medium mt-1">{label}</p>
-                    </div>
+              <p className="text-xs text-slate-300 max-w-sm mx-auto">
+                Your study roadmap and daily backlog can be calibrated to start from <strong>{level}</strong>.
+              </p>
 
-                    <p className="text-xs text-slate-400 text-left bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 leading-relaxed">
-                      Based on your grammar and phonetic answers, we recommend starting your active roadmap at <strong className="text-white">{level}</strong>. 
-                      This prevents wasting time on beginner material if you already understand core conjugation rules, while ensuring no foundational gaps are skipped.
-                    </p>
-
-                    <div className="flex space-x-3 pt-2">
-                      <button
-                        onClick={() => {
-                          setSelectedAnswers(new Array(questions.length).fill(-1));
-                          setCurrentIndex(0);
-                          setIsFinished(false);
-                        }}
-                        className="flex-1 flex items-center justify-center space-x-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Retake Quiz</span>
-                      </button>
-
-                      <button
-                        onClick={handleApplyCalibration}
-                        className="flex-1 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition shadow-lg shadow-sky-500/20"
-                      >
-                        Apply Level to My Plan
-                      </button>
-                    </div>
-                  </>
-                );
-              })()}
+              <div className="pt-2 flex justify-center space-x-3">
+                <button
+                  onClick={handleApplyResult}
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-amber-500/20"
+                >
+                  Apply {level} to My Roadmap
+                </button>
+              </div>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
