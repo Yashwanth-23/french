@@ -1,0 +1,114 @@
+[
+  {
+    "id": "diag-1",
+    "level": "A0",
+    "skill": "Phonetics",
+    "question": "In the French word \"Comment\" (as in \"Comment allez-vous ?\"), which letter is silent?",
+    "options": [
+      "The letter C",
+      "The letter O",
+      "The letter T",
+      "The letter M"
+    ],
+    "correctIndex": 2,
+    "explanation": "In French, final consonants (D, P, S, T, X, Z) are generally silent unless followed by a vowel or governed by the CaReFuL rule."
+  },
+  {
+    "id": "diag-2",
+    "level": "A1",
+    "skill": "Conjugation",
+    "question": "Choose the correct present tense conjugation: \"Nous _____ à Paris.\" (aller)",
+    "options": [
+      "allons",
+      "allez",
+      "vont",
+      "vas"
+    ],
+    "correctIndex": 0,
+    "explanation": "The irregular verb \"aller\" conjugates with \"nous\" as \"nous allons\"."
+  },
+  {
+    "id": "diag-3",
+    "level": "A1",
+    "skill": "Grammar",
+    "question": "Which auxiliary verb is used to form the Passé Composé for the movement verb \"partir\" (to leave)?",
+    "options": [
+      "Avoir (\"J'ai parti\")",
+      "Être (\"Je suis parti\")",
+      "Faire (\"Je fais parti\")",
+      "Aller (\"Je vais parti\")"
+    ],
+    "correctIndex": 1,
+    "explanation": "\"Partir\" is part of the DR & MRS VANDERTRAMP group of movement verbs that take ÊTRE as their auxiliary in Passé Composé."
+  },
+  {
+    "id": "diag-4",
+    "level": "A2",
+    "skill": "Grammar",
+    "question": "Complete the sentence with the correct pronoun: \"Tu as vu la nouvelle voiture de Marc ? — Oui, je _____ ai vue hier.\"",
+    "options": [
+      "le",
+      "lui",
+      "la",
+      "en"
+    ],
+    "correctIndex": 2,
+    "explanation": "\"La voiture\" is a feminine singular direct object (COD). It is replaced by the pronoun \"la\" (placed before the verb)."
+  },
+  {
+    "id": "diag-5",
+    "level": "A2",
+    "skill": "Grammar",
+    "question": "Choose the correct tense combination: \"Pendant que je _____ (dormir), mon téléphone _____ (sonner).\"",
+    "options": [
+      "dormais (Imparfait) / a sonné (Passé Composé)",
+      "ai dormi (Passé Composé) / sonnait (Imparfait)",
+      "dormais (Imparfait) / sonnait (Imparfait)",
+      "ai dormi (Passé Composé) / a sonné (Passé Composé)"
+    ],
+    "correctIndex": 0,
+    "explanation": "Sleeping is an ongoing background state (Imparfait: je dormais) interrupted by a specific instantaneous event (Passé Composé: a sonné)."
+  },
+  {
+    "id": "diag-6",
+    "level": "B1",
+    "skill": "Grammar",
+    "question": "Which mood must follow the expression \"Il est nécessaire que...\" ?",
+    "options": [
+      "Indicatif Présent",
+      "Subjonctif Présent",
+      "Conditionnel Présent",
+      "Futur Simple"
+    ],
+    "correctIndex": 1,
+    "explanation": "Expressions of necessity, emotion, doubt, and obligation (Il faut que, Il est nécessaire que) strictly trigger the Subjonctif in French."
+  },
+  {
+    "id": "diag-7",
+    "level": "B1",
+    "skill": "Grammar",
+    "question": "How do you replace \"à la bibliothèque\" in: \"Je vais à la bibliothèque demain\" ?",
+    "options": [
+      "Je lui vais demain",
+      "Je m'y vais demain",
+      "J'y vais demain",
+      "J'en vais demain"
+    ],
+    "correctIndex": 2,
+    "explanation": "The pronoun \"Y\" replaces places introduced by prepositions like \"à\", \"en\", \"dans\", or \"chez\"."
+  },
+  {
+    "id": "diag-8",
+    "level": "B2",
+    "skill": "CO",
+    "question": "In Canadian / Québécois French, what does the expression \"magasiner\" mean?",
+    "options": [
+      "To read magazines",
+      "To go shopping for clothes / goods",
+      "To build a house",
+      "To store merchandise in a warehouse"
+    ],
+    "correctIndex": 1,
+    "explanation": "In Québécois French, \"magasiner\" is the standard term for \"faire les courses / faire du shopping\"."
+  }
+]

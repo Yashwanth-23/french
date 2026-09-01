@@ -1,0 +1,150 @@
+[
+  {
+    "id": "milestone-a0",
+    "level": "A0",
+    "phaseLabel": "Phase 0: Phonetic Foundation & Silent Letter Logic",
+    "title": "Phonetics, Orthography & High-Frequency Greetings",
+    "targetHoursFloor": 25,
+    "targetHoursOptimized": 30,
+    "description": "Master French sounds (nasals, guttural R, liaison) and silent letter rules before learning vocabulary to avoid fossilizing bad pronunciation.",
+    "grammarKeypoints": [
+      "IPA French Vowels & Nasal Vowels (an/en, in/ain, on, un)",
+      "Consonants & The French R / Dental T and D",
+      "Silent final consonants (D, P, S, T, X, Z) vs CaReFuL rule (C, R, F, L)",
+      "Liaison & Enchaînement (linking words smoothly)",
+      "Subject Pronouns (je, tu, il/elle/on, nous, vous, ils/elles)"
+    ],
+    "vocabTargetCount": 200,
+    "activeRequirements": [
+      "Accurately pronounce all 4 French nasal vowels without sounding out the N",
+      "Understand the distinction between Tu (तू/तुम) and Vous (आप)",
+      "Recite numbers 0-100 and spell out names using French alphabet sounds"
+    ],
+    "recommendedResourceIds": [
+      "french-sounds-phonetics",
+      "le-conjugueur",
+      "anki-5000-deck"
+    ]
+  },
+  {
+    "id": "milestone-a1",
+    "level": "A1",
+    "phaseLabel": "Phase 1: Basic Structural Mechanics & Daily Interactions",
+    "title": "Present Tense, Passé Composé & Core 1,000 Lexicon",
+    "targetHoursFloor": 120,
+    "targetHoursOptimized": 140,
+    "description": "Construct solid affirmative, negative, and interrogative sentences. Master regular verb groups and essential irregulars (être, avoir, faire, aller).",
+    "grammarKeypoints": [
+      "Regular verb groups: -er (90% of verbs), -ir, -re in Présent",
+      "Auxiliary verbs: ÊTRE and AVOIR mastery",
+      "Passé Composé with Avoir vs DR & MRS VANDERTRAMP verbs with Être",
+      "Negation structures: ne... pas, ne... jamais, ne... rien",
+      "Articles: Definite (le, la, les), Indefinite (un, une, des), Partitive (du, de la, des)",
+      "Near Future: Futur Proche (aller + infinitive)"
+    ],
+    "vocabTargetCount": 1000,
+    "activeRequirements": [
+      "Introduce yourself, family, profession, daily routine, and immediate surroundings",
+      "Form questions using 3 methods (Intonation, Est-ce que, Inversion)",
+      "Complete 15 minutes of daily Anki SRS retrieval without missing reviews"
+    ],
+    "recommendedResourceIds": [
+      "le-conjugueur",
+      "lawless-french",
+      "anki-5000-deck",
+      "coffee-break-french",
+      "podcast-francais-facile"
+    ]
+  },
+  {
+    "id": "milestone-a2",
+    "level": "A2",
+    "phaseLabel": "Phase 2: Conversational Transition & Narrative Fluency",
+    "title": "Imparfait vs Passé Composé, Object Pronouns & Oral Shadowing",
+    "targetHoursFloor": 180,
+    "targetHoursOptimized": 200,
+    "description": "Tell complete stories in the past. Differentiate between completed past actions and ongoing background descriptions. Begin active vocal shadowing.",
+    "grammarKeypoints": [
+      "Passé Composé vs Imparfait (Crucial narrative distinction)",
+      "Direct Object Pronouns (COD: me, te, le, la, nous, vous, les)",
+      "Indirect Object Pronouns (COI: me, te, lui, nous, vous, leur)",
+      "Pronoun Placement before the conjugated verb",
+      "Reflexive verbs in past tense with agreement rules",
+      "Comparatives and Superlatives (plus... que, moins... que, le meilleur)"
+    ],
+    "vocabTargetCount": 2200,
+    "activeRequirements": [
+      "Listen to InnerFrench episodes with and without transcripts",
+      "Actively shadow (record and mimic) 3 minutes of audio per session",
+      "Describe past vacations, childhood memories, and daily challenges spontaneously"
+    ],
+    "recommendedResourceIds": [
+      "innerfrench-podcast",
+      "le-conjugueur",
+      "lawless-french",
+      "anki-5000-deck",
+      "tv5-tcf-simulator"
+    ]
+  },
+  {
+    "id": "milestone-b1",
+    "level": "B1",
+    "phaseLabel": "Phase 3: Expressive Independence & Native Input",
+    "title": "Subjonctif, Conditionnel, Pronouns Y/EN & News Auditory Parsing",
+    "targetHoursFloor": 260,
+    "targetHoursOptimized": 280,
+    "description": "Express doubt, necessity, emotions, and hypothetical scenarios. Transition from educational audio to real-time native broadcasts and Québécois listening.",
+    "grammarKeypoints": [
+      "Subjonctif Présent (Necessity, emotion, doubt triggers: il faut que, bien que)",
+      "Conditionnel Présent (Politeness, hypothetical situations with SI clauses)",
+      "Pronoun Y (places & à + noun) and Pronoun EN (quantities & de + noun)",
+      "Double pronoun order (e.g., Il me le donne / Il lui en parle)",
+      "Futur Simple and Relative Pronouns (qui, que, où, dont)",
+      "Logical Connectors (en revanche, par conséquent, toutefois, néanmoins)"
+    ],
+    "vocabTargetCount": 4000,
+    "activeRequirements": [
+      "Shadow RFI Journal en français facile 4x weekly",
+      "Listen to Québécois accent audio clips weekly to calibrate Canadian ear",
+      "Write 150-word opinion paragraphs defending a viewpoint with 3 distinct arguments"
+    ],
+    "recommendedResourceIds": [
+      "rfi-journal-facile",
+      "innerfrench-podcast",
+      "quebecois-wandering-french",
+      "lawless-french",
+      "french-school-tv",
+      "tv5-tcf-simulator"
+    ]
+  },
+  {
+    "id": "milestone-b2",
+    "level": "B2",
+    "phaseLabel": "Phase 4: TEF/TCF Canada Exam Precision & High Speed",
+    "title": "Official FEI/CCIP Mock Mastery, Section A/B Roleplays & Formal Writing",
+    "targetHoursFloor": 220,
+    "targetHoursOptimized": 250,
+    "description": "Full timed simulations under real exam room pressure. Section A 5-minute inquiry drills, Section B 10-minute persuasion debates, and 200-word formal letter writing.",
+    "grammarKeypoints": [
+      "Subjonctif Passé & Conditionnel Passé (Regrets and past hypotheses)",
+      "Advanced Discourse Markers (d’un côté... d’un autre côté, force est de constater)",
+      "Nominalization (converting verbs to formal nouns for writing economy)",
+      "Stylistic inversion and formal register vocabulary",
+      "Canadian French colloquial and formal lexical equivalents"
+    ],
+    "vocabTargetCount": 5500,
+    "activeRequirements": [
+      "Score consistently above CLB/NCLC 7 in official FEI/CCIP full timed sample papers",
+      "Deliver fluid 10-minute Section B persuasion speeches handling examiner objections without pause",
+      "Complete 200-word Section B formal writing pieces in under 25 minutes with zero gender/conjugation errors"
+    ],
+    "recommendedResourceIds": [
+      "fei-tcf-samples",
+      "ccip-tef-samples",
+      "tv5-tcf-simulator",
+      "french-school-tv",
+      "rfi-journal-facile",
+      "radio-canada-ohdio"
+    ]
+  }
+]
