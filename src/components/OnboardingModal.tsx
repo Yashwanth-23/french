@@ -1,82 +1,193 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { UserPreferences, UserProfile } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
-import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, X } from 'lucide-react';
-import { updateActiveProfile } from '../engine/storage';
+import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { createCloudProfile, checkSlugAvailable, slugify } from '../engine/dataService';
 
 interface OnboardingModalProps {
   isOpen: boolean;
-  onClose: () => void;
-  activeProfile: UserProfile;
-  onComplete: () => void;
+  onClose?: () => void;
+  onProfileCreated: (profile: UserProfile) => void;
+  isInitialSetup?: boolean;
 }
 
 export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   isOpen,
   onClose,
-  activeProfile,
-  onComplete
+  onProfileCreated,
+  isInitialSetup = false
 }) => {
-  const [dailyMinutes, setDailyMinutes] = useState(activeProfile.preferences.dailyTimeMinutes);
-  const [selectedFormats, setSelectedFormats] = useState<MediaFormat[]>(activeProfile.preferences.preferredFormats);
-  const [startingLevel, setStartingLevel] = useState<CEFRLevel>(activeProfile.preferences.startingLevel);
-  const [targetExam, setTargetExam] = useState<ExamTarget>(activeProfile.preferences.targetExam || 'Universal_B2');
+  const [name, setName] = useState('');
+  const [desiredSlug, setDesiredSlug] = useState('');
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [dailyMinutes, setDailyMinutes] = useState(120);
+  const [targetExam, setTargetExam] = useState<ExamTarget>('TEF_Canada');
+  const [selectedFormats, setSelectedFormats] = useState<MediaFormat[]>(['podcast', 'youtube']);
+  const [startingLevel, setStartingLevel] = useState<CEFRLevel>('A0');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (name.trim()) {
+      const candidate = slugify(name);
+      setDesiredSlug(candidate);
+    }
+  }, [name]);
+
+  useEffect(() => {
+    if (!desiredSlug.trim()) {
+      setSlugAvailable(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsCheckingSlug(true);
+      const available = await checkSlugAvailable(desiredSlug);
+      setSlugAvailable(available);
+      setIsCheckingSlug(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [desiredSlug]);
 
   if (!isOpen) return null;
 
   const handleToggleFormat = (format: MediaFormat) => {
-    setSelectedFormats(prev => 
-      prev.includes(format) 
-        ? (prev.length > 1 ? prev.filter(f => f !== format) : prev) 
+    setSelectedFormats(prev =>
+      prev.includes(format)
+        ? (prev.length > 1 ? prev.filter(f => f !== format) : prev)
         : [...prev, format]
     );
   };
 
-  const handleSave = () => {
-    updateActiveProfile(prev => ({
-      ...prev,
-      preferences: {
-        ...prev.preferences,
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const prefs: UserPreferences = {
         dailyTimeMinutes: dailyMinutes,
         preferredFormats: selectedFormats,
         startingLevel,
-        targetExam
-      },
-      currentMilestoneId: `milestone-${startingLevel.toLowerCase()}`
-    }));
-    onComplete();
-    onClose();
+        targetExamDateMonths: 16,
+        targetExam,
+        skillFrictions: ['EO', 'Conjugation']
+      };
+
+      const newProfile = await createCloudProfile(name, prefs, desiredSlug);
+
+      // Update URL with personal slug without reload
+      const newUrl = `${window.location.origin}${window.location.pathname}?user=${newProfile.id}`;
+      window.history.pushState({ path: newUrl }, '', newUrl);
+
+      onProfileCreated(newProfile);
+      if (onClose) onClose();
+    } catch (err) {
+      console.error('Failed to create profile', err);
+      alert('Error creating profile. Please try another username.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/80">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="w-5 h-5 text-sky-400" />
-            <h2 className="text-base font-bold text-white">Customize Your French Plan</h2>
+        <div className="px-6 py-5 border-b border-slate-800 bg-gradient-to-r from-sky-950/40 via-slate-900 to-indigo-950/40">
+          <div className="flex items-center space-x-2 text-xs uppercase font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 w-fit mb-1">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Personalized Cloud Setup</span>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
-            <X className="w-5 h-5" />
-          </button>
+          <h2 className="text-xl font-extrabold text-white">
+            {isInitialSetup ? 'Create Your Canadian French Plan' : 'Configure New Study Profile'}
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            Your plan, rolling task queue, and study hours will sync automatically across your phone and laptop.
+          </p>
         </div>
 
         {/* Form Body */}
-        <div className="p-6 space-y-5">
+        <form onSubmit={handleSave} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           
+          {/* Name & Collision-Proof Slug */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block">
+              1. Your Name / Personal Handle
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Vasir or Rahul"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+              required
+            />
+
+            {/* Generated Unique Access Link Preview */}
+            {desiredSlug && (
+              <div className="flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400">
+                <span className="truncate">
+                  Sync Link: <strong className="text-sky-400">?user={desiredSlug}</strong>
+                </span>
+                <span className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                  {isCheckingSlug ? (
+                    <RefreshCw className="w-3 h-3 animate-spin text-slate-400" />
+                  ) : slugAvailable === true ? (
+                    <span className="text-emerald-400 flex items-center space-x-0.5">
+                      <Check className="w-3 h-3" />
+                      <span>Available</span>
+                    </span>
+                  ) : slugAvailable === false ? (
+                    <span className="text-amber-400 flex items-center space-x-0.5">
+                      <AlertCircle className="w-3 h-3" />
+                      <span>Taken (will add suffix)</span>
+                    </span>
+                  ) : null}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Target Exam */}
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
+              2. Canadian Immigration Target Exam
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'TEF_Canada', label: 'TEF Canada', sub: 'Single-pass audio (CCIP)' },
+                { id: 'TCF_Canada', label: 'TCF Canada', sub: 'Mixed playback (FEI)' },
+                { id: 'Universal_B2', label: 'Universal B2', sub: 'Both / Undecided' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setTargetExam(item.id as ExamTarget)}
+                  className={`p-2.5 rounded-xl border text-left transition ${
+                    targetExam === item.id
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500 shadow-sm'
+                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="text-xs font-bold text-white">{item.label}</div>
+                  <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{item.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Daily Commitment */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-              1. Daily Time Available
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
+              3. Daily Time Available
             </label>
             <div className="grid grid-cols-4 gap-2">
               {[
-                { mins: 30, label: '30m (Slow)' },
-                { mins: 60, label: '1.0h' },
-                { mins: 90, label: '1.5h' },
-                { mins: 120, label: '2.0h' },
+                { mins: 30, label: '30m (Lite)' },
+                { mins: 60, label: '1.0h (Steady)' },
+                { mins: 90, label: '1.5h (Optimal)' },
+                { mins: 120, label: '2.0h (Intensive)' },
               ].map(item => (
                 <button
                   key={item.mins}
@@ -94,45 +205,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Target Exam */}
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-              2. Canadian Target Exam
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: 'TEF_Canada', label: 'TEF Canada', sub: 'Single-pass audio' },
-                { id: 'TCF_Canada', label: 'TCF Canada', sub: 'Mixed audio pass' },
-                { id: 'Universal_B2', label: 'Universal B2', sub: 'Both / Undecided' },
-              ].map(item => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setTargetExam(item.id as ExamTarget)}
-                  className={`p-2 rounded-xl border text-left transition ${
-                    targetExam === item.id
-                      ? 'bg-rose-500/20 text-rose-300 border-rose-500'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="text-xs font-bold text-white">{item.label}</div>
-                  <div className="text-[10px] text-slate-400">{item.sub}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Formats */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-              3. Preferred Learning Formats
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
+              4. Preferred Learning Formats
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'podcast', label: 'Audio / Podcasts', icon: Headphones },
+                { id: 'podcast', label: 'Audio & Podcasts', icon: Headphones },
                 { id: 'youtube', label: 'YouTube / Video', icon: Youtube },
+                { id: 'web_app', label: 'Interactive Web Drills', icon: Globe },
                 { id: 'book_pdf', label: 'Books / PDFs', icon: BookOpen },
-                { id: 'web_app', label: 'Web Apps / Drills', icon: Globe },
               ].map(item => {
                 const Icon = item.icon;
                 const isSelected = selectedFormats.includes(item.id as MediaFormat);
@@ -157,43 +240,52 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
           {/* Level */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
-              4. Current French Proficiency
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
+              5. Current Proficiency
             </label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { id: 'A0', label: 'A0 (True Zero)' },
-                { id: 'A1', label: 'A1 (Basic Words)' },
-                { id: 'A2', label: 'A2 (Simple Stories)' },
-                { id: 'B1', label: 'B1 (Intermediate)' },
+                { id: 'A0', label: 'A0 (True Zero - Start with Sounds)' },
+                { id: 'A1', label: 'A1 (Know Basic Greetings & Verbs)' },
+                { id: 'A2', label: 'A2 (Can Form Sentences in Past)' },
+                { id: 'B1', label: 'B1 (Intermediate Reader / Audio)' },
               ].map(item => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setStartingLevel(item.id as CEFRLevel)}
-                  className={`py-2 px-3 rounded-xl text-xs font-semibold border text-left transition ${
+                  className={`p-2.5 rounded-xl border text-left transition ${
                     startingLevel === item.id
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500'
                       : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  {item.label}
+                  <span className="text-xs font-semibold text-white block">{item.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Action */}
+          {/* Action Button */}
           <button
-            type="button"
-            onClick={handleSave}
-            className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs tracking-wide uppercase transition shadow-lg shadow-sky-500/20 flex items-center justify-center space-x-2"
+            type="submit"
+            disabled={!name.trim() || isSubmitting}
+            className="w-full py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs tracking-wide uppercase transition shadow-lg shadow-sky-500/20 flex items-center justify-center space-x-2 disabled:opacity-50"
           >
-            <span>Update & Recalibrate Dashboard</span>
-            <ArrowRight className="w-4 h-4" />
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Creating Cloud Sync Profile...</span>
+              </>
+            ) : (
+              <>
+                <span>Initialize Rolling Study Queue</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
 
-        </div>
+        </form>
       </div>
     </div>
   );

@@ -9,13 +9,20 @@ import { ProfileSwitcher } from './components/ProfileSwitcher';
 import { DiagnosticQuiz } from './components/DiagnosticQuiz';
 import { OnboardingModal } from './components/OnboardingModal';
 import { HelpGuideModal } from './components/HelpGuideModal';
-import { getActiveProfile, decodeSharedProfile, createNewProfile } from './engine/storage';
+import { 
+  getActiveSlugFromUrlOrStorage, 
+  fetchProfile, 
+  saveProfileToCloud, 
+  isSupabaseConfigured 
+} from './engine/dataService';
 import { UserProfile } from './types/preferences';
 import { CEFRLevel } from './types/curriculum';
+import { Cloud, Info, ExternalLink } from 'lucide-react';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('mission');
-  const [activeProfile, setActiveProfileState] = useState<UserProfile>(getActiveProfile());
+  const [activeProfile, setActiveProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Modals
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -23,30 +30,45 @@ export function App() {
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
-  // Check URL parameters for shared plan
+  // Initialize Profile on Mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const planToken = params.get('plan');
-    if (planToken) {
-      const decoded = decodeSharedProfile(planToken);
-      if (decoded && decoded.preferences) {
-        const friendProfile = createNewProfile(
-          decoded.name || "Friend's Shared Plan",
-          `${(decoded.preferences.dailyTimeMinutes / 60).toFixed(1)}h / Day • Shared Track`,
-          decoded.preferences
-        );
-        setActiveProfileState(friendProfile);
-        window.history.replaceState({}, document.title, window.location.pathname);
+    async function loadInitialProfile() {
+      setIsLoading(true);
+      const slug = getActiveSlugFromUrlOrStorage();
+      if (slug) {
+        const found = await fetchProfile(slug);
+        if (found) {
+          setActiveProfile(found);
+          setIsLoading(false);
+          return;
+        }
       }
+
+      // No profile found -> trigger Onboarding Wizard
+      setIsLoading(false);
+      setIsOnboardingModalOpen(true);
     }
+    loadInitialProfile();
   }, []);
 
-  const handleProfileRefresh = () => {
-    setActiveProfileState(getActiveProfile());
+  const handleProfileCreatedOrUpdated = (updatedProfile: UserProfile) => {
+    setActiveProfile(updatedProfile);
+    setIsOnboardingModalOpen(false);
   };
 
-  const handleDiagnosticComplete = (calibratedLevel: CEFRLevel) => {
-    handleProfileRefresh();
+  const handleDiagnosticComplete = async (calibratedLevel: CEFRLevel) => {
+    if (activeProfile) {
+      const updated: UserProfile = {
+        ...activeProfile,
+        currentMilestoneId: `milestone-${calibratedLevel.toLowerCase()}`,
+        preferences: {
+          ...activeProfile.preferences,
+          startingLevel: calibratedLevel
+        }
+      };
+      await saveProfileToCloud(updated);
+      setActiveProfile(updated);
+    }
     setActiveTab('mission');
   };
 
@@ -58,72 +80,99 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         activeProfile={activeProfile}
-        onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenProfileModal={() => setIsOnboardingModalOpen(true)}
         onOpenDiagnosticModal={() => setIsDiagnosticModalOpen(true)}
         onOpenHelpModal={() => setIsHelpModalOpen(true)}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'mission' && (
-          <DailyMission
-            activeProfile={activeProfile}
-            onProfileUpdate={handleProfileRefresh}
-            onNavigateToTab={(tab) => setActiveTab(tab)}
-          />
-        )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-24">
+            <div className="w-8 h-8 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>
+          </div>
+        ) : !activeProfile ? (
+          <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-4 max-w-lg mx-auto mt-12">
+            <div className="w-12 h-12 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto text-xl">
+              🍁
+            </div>
+            <h2 className="text-xl font-bold text-white">Welcome to French Mastery Portal</h2>
+            <p className="text-xs text-slate-400">
+              Create your personalized Canadian French study plan to start your rolling task backlog.
+            </p>
+            <button
+              onClick={() => setIsOnboardingModalOpen(true)}
+              className="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition"
+            >
+              Start Personal Setup Wizard
+            </button>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'mission' && (
+              <DailyMission
+                activeProfile={activeProfile}
+                onProfileUpdate={handleProfileCreatedOrUpdated}
+                onNavigateToTab={(tab) => setActiveTab(tab)}
+              />
+            )}
 
-        {activeTab === 'roadmap' && (
-          <RoadmapView
-            activeProfile={activeProfile}
-            onProfileUpdate={handleProfileRefresh}
-            onOpenResource={(resId) => setActiveTab('catalog')}
-          />
-        )}
+            {activeTab === 'roadmap' && (
+              <RoadmapView
+                activeProfile={activeProfile}
+                onProfileUpdate={async () => {
+                  if (activeProfile) {
+                    const fresh = await fetchProfile(activeProfile.id);
+                    if (fresh) setActiveProfile(fresh);
+                  }
+                }}
+                onOpenResource={(resId) => setActiveTab('catalog')}
+              />
+            )}
 
-        {activeTab === 'bridges' && (
-          <IndianBridgeGuide />
-        )}
+            {activeTab === 'bridges' && (
+              <IndianBridgeGuide />
+            )}
 
-        {activeTab === 'exam' && (
-          <ExamHub />
-        )}
+            {activeTab === 'exam' && (
+              <ExamHub />
+            )}
 
-        {activeTab === 'catalog' && (
-          <ResourceCatalog
-            activeProfile={activeProfile}
-            onProfileUpdate={handleProfileRefresh}
-          />
+            {activeTab === 'catalog' && (
+              <ResourceCatalog
+                activeProfile={activeProfile}
+                onProfileUpdate={async () => {
+                  if (activeProfile) {
+                    const fresh = await fetchProfile(activeProfile.id);
+                    if (fresh) setActiveProfile(fresh);
+                  }
+                }}
+              />
+            )}
+          </>
         )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/80 py-6 mt-12 text-center text-xs text-slate-500 font-mono">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>French TEF/TCF Canada Mastery Portal • 100% Client-Side Open Tool</span>
+          <span>French TEF/TCF Canada Mastery Portal • Multi-Device Cloud Sync Ready</span>
           <span>Targeting NCLC 7 / B2 • Indian Linguistic Bridge Model</span>
         </div>
       </footer>
 
       {/* Modals */}
-      <ProfileSwitcher
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        activeProfile={activeProfile}
-        onProfileChanged={handleProfileRefresh}
+      <OnboardingModal
+        isOpen={isOnboardingModalOpen}
+        onClose={() => setIsOnboardingModalOpen(false)}
+        onProfileCreated={handleProfileCreatedOrUpdated}
+        isInitialSetup={!activeProfile}
       />
 
       <DiagnosticQuiz
         isOpen={isDiagnosticModalOpen}
         onClose={() => setIsDiagnosticModalOpen(false)}
         onCalibrationComplete={handleDiagnosticComplete}
-      />
-
-      <OnboardingModal
-        isOpen={isOnboardingModalOpen}
-        onClose={() => setIsOnboardingModalOpen(false)}
-        activeProfile={activeProfile}
-        onComplete={handleProfileRefresh}
       />
 
       <HelpGuideModal

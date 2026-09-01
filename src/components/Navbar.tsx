@@ -8,14 +8,17 @@ import {
   Languages, 
   Calendar, 
   UserCheck,
-  HelpCircle
+  HelpCircle,
+  Cloud,
+  Share2
 } from 'lucide-react';
 import { UserProfile } from '../types/preferences';
+import { isSupabaseConfigured } from '../engine/dataService';
 
 interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  activeProfile: UserProfile;
+  activeProfile: UserProfile | null;
   onOpenProfileModal: () => void;
   onOpenDiagnosticModal: () => void;
   onOpenHelpModal: () => void;
@@ -84,10 +87,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center space-x-2">
             
             {/* Streak Status Pill */}
-            <div className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold">
-              <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
-              <span>{activeProfile.streakDays}d</span>
-            </div>
+            {activeProfile && (
+              <div className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold">
+                <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
+                <span>{activeProfile.streakDays || 1}d</span>
+              </div>
+            )}
 
             {/* Diagnostic Action Button */}
             <button
@@ -108,18 +113,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               <HelpCircle className="w-4 h-4" />
             </button>
 
-            {/* Profile Switcher */}
-            <button
-              onClick={onOpenProfileModal}
-              className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 text-xs font-medium hover:border-sky-500 transition"
-              title="Switch or Configure Profile"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-sky-400" />
-              <span className="max-w-[90px] truncate">{activeProfile.name.split(' ')[0]}</span>
-              <span className="text-[10px] px-1 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">
-                {activeProfile.preferences.dailyTimeMinutes}m
-              </span>
-            </button>
+            {/* Profile Button / Cloud User Link */}
+            {activeProfile ? (
+              <button
+                onClick={onOpenProfileModal}
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 text-xs font-medium hover:border-sky-500 transition"
+                title="Switch Profile / Edit Time"
+              >
+                <UserCheck className="w-3.5 h-3.5 text-sky-400" />
+                <span className="max-w-[90px] truncate">@{activeProfile.id}</span>
+                <span className="text-[10px] px-1 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">
+                  {activeProfile.preferences.dailyTimeMinutes}m
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={onOpenProfileModal}
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition shadow-md shadow-sky-500/20"
+              >
+                <span>Get Started</span>
+              </button>
+            )}
 
           </div>
         </div>
