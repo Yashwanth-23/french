@@ -377,7 +377,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
                           <div className="mt-2.5 flex items-start space-x-2 p-2.5 rounded-xl bg-sky-950/40 border border-sky-500/20 text-sky-200 text-xs">
                             <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
                             <div className="leading-snug">
-                              <strong className="text-sky-300">Indian Learner Bridge:</strong> {task.notesForIndianLearner}
+                              <strong className="text-sky-300">Linguistic Bridge:</strong> {task.notesForIndianLearner}
                             </div>
                           </div>
                         )}
@@ -475,10 +475,10 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
           className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-sky-500/40 text-left transition group"
         >
           <div className="text-xs font-semibold text-sky-400 flex items-center justify-between">
-            <span>Indian Language Shortcuts</span>
+            <span>Linguistic Shortcuts</span>
             <span className="group-hover:translate-x-1 transition-transform">→</span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">Hindi gender mapping, Tu/Vous vs Tu/Aap, Nasal vowel rules.</p>
+          <p className="text-xs text-slate-400 mt-1">Compare French with English, Spanish, Telugu, or Hindi.</p>
         </button>
 
         <button

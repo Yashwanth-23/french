@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const tabs = [
     { id: 'mission', label: "Today's Mission", icon: Compass },
     { id: 'roadmap', label: 'CEFR Roadmap', icon: Calendar },
-    { id: 'bridges', label: 'Indian Shortcuts', icon: Languages },
+    { id: 'bridges', label: 'Linguistic Bridges', icon: Languages },
     { id: 'exam', label: 'TEF / TCF Canada Hub', icon: GraduationCap },
     { id: 'catalog', label: 'Resource Vault', icon: BookOpen },
   ];
@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   TEF/TCF
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-mono hidden sm:block">Indian Linguistic Engine</p>
+              <p className="text-[11px] text-slate-400 font-mono hidden sm:block">Multilingual Cognitive Engine</p>
             </div>
           </div>
 

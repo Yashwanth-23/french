@@ -94,13 +94,15 @@ export interface IndianBridgeConcept {
   topic: string;
   category: 'Grammar' | 'Phonetics' | 'Vocabulary' | 'Sociolinguistics';
   frenchConcept: string;
-  hindiAnalogy: string;
-  teluguAnalogy: string;
   englishAnalogy: string;
+  spanishAnalogy?: string;
+  hindiAnalogy?: string;
+  teluguAnalogy?: string;
   exampleFrench: string;
-  exampleHindi: string;
-  exampleTelugu: string;
   exampleEnglish: string;
+  exampleSpanish?: string;
+  exampleHindi?: string;
+  exampleTelugu?: string;
   practicalTip: string;
 }
 
