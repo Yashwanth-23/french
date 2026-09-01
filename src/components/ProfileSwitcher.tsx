@@ -249,7 +249,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                 <label className="text-xs text-slate-300 block mb-1">Friend's Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Alex"
+                  placeholder="e.g. Alex, Jordan..."
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"

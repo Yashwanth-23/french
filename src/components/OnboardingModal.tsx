@@ -96,10 +96,18 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
   };
 
-  const handleGenerateRandom = async () => {
-    const random = generateRandomHandle();
+    const handleGenerateRandom = async () => {
+    let random = generateRandomHandle();
+    let isAvail = await checkSlugAvailable(random);
+    let attempts = 0;
+    while (!isAvail && attempts < 10) {
+      random = generateRandomHandle();
+      isAvail = await checkSlugAvailable(random);
+      attempts++;
+    }
     setName(random);
     setDesiredSlug(random);
+    setSlugAvailable(true);
   };
 
   const handleToggleFormat = (format: MediaFormat) => {
@@ -295,7 +303,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <div className="relative">
               <input
                 type="text"
-                placeholder="e.g. Yash or Rahul"
+                placeholder="e.g. Alex, Jordan, or enter your username..."
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition ${
