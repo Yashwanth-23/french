@@ -148,10 +148,15 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
                       </div>
 
                       <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-                        <div className="text-[11px] font-bold text-emerald-400 mb-1">Active Output Goal</div>
-                        <p className="text-xs text-slate-300">
-                          {m.activeOutputMilestone}
-                        </p>
+                        <div className="text-[11px] font-bold text-emerald-400 mb-1">Active Output Requirements</div>
+                        <ul className="text-xs text-slate-300 space-y-1">
+                          {m.activeRequirements.map((req: string, rIdx: number) => (
+                            <li key={rIdx} className="flex items-center space-x-1.5">
+                              <span className="text-emerald-500 font-bold">✓</span>
+                              <span>{req}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
                   </div>
