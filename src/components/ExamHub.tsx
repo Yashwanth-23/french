@@ -8,13 +8,14 @@ import {
   PenTool, 
   CheckCircle2, 
   Sparkles, 
-  AlertCircle, 
+  AlertTriangle, 
   Copy, 
   Check, 
   HelpCircle,
   ShieldAlert,
   Headphones,
-  Scale
+  Scale,
+  Info
 } from 'lucide-react';
 import examData from '../data/examTemplates.json';
 import { ExamTemplateSection, ExamTarget } from '../types/curriculum';
@@ -47,13 +48,13 @@ export const ExamHub: React.FC = () => {
       <div className="p-6 rounded-2xl bg-gradient-to-r from-rose-950/40 via-slate-900 to-indigo-950/40 border border-slate-800 shadow-xl">
         <div className="flex items-center space-x-2 text-xs uppercase font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 w-fit">
           <GraduationCap className="w-3.5 h-3.5" />
-          <span>Canadian Express Entry Target: NCLC 7 / B2</span>
+          <span>Official IRCC Target: CLB 7 / NCLC 7</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
           TEF Canada vs TCF Canada Strategy Vault
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-3xl leading-relaxed">
-          Master the exact structural differences, listening playback rules (Single-pass vs Double-pass), and scoring thresholds for Canada's approved French tests.
+          Official past formats, single-pass vs. double-pass listening strategy, and verified Government of Canada (IRCC) score conversion tables.
         </p>
 
         {/* Free Official Links & Mock Depth Truth Matrix */}
@@ -61,7 +62,7 @@ export const ExamHub: React.FC = () => {
           
           {/* TV5Monde */}
           <a
-            href="https://apprendre.tv5monde.com/fr/tcf"
+            href="https://apprendre.tv5monde.com/fr/exercices/tcf"
             target="_blank"
             rel="noreferrer"
             className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500 text-xs flex flex-col justify-between transition group"
@@ -71,7 +72,7 @@ export const ExamHub: React.FC = () => {
                 <span className="font-bold text-white group-hover:text-indigo-400 transition">TV5Monde Simulator</span>
                 <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Deep Mock Bank</span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Dozens of complete 40-question mock series developed with FEI.</p>
+              <p className="text-[11px] text-slate-400 mt-1">Dozens of complete 40-question series developed with FEI.</p>
             </div>
             <div className="flex items-center space-x-1 text-indigo-400 font-medium text-[11px] mt-2 pt-2 border-t border-slate-800">
               <span>Launch Mock Engine</span>
@@ -81,17 +82,17 @@ export const ExamHub: React.FC = () => {
 
           {/* RFI Savoirs TCF */}
           <a
-            href="https://francaisfacile.rfi.fr/fr/enseigner/recherche/activite/entrainement-au-tcf"
+            href="https://francaisfacile.rfi.fr/fr/podcasts/journal-en-fran%C3%A7ais-facile/"
             target="_blank"
             rel="noreferrer"
             className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500 text-xs flex flex-col justify-between transition group"
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white group-hover:text-emerald-400 transition">RFI Savoirs TCF Bank</span>
+                <span className="font-bold text-white group-hover:text-emerald-400 transition">RFI Savoirs & News</span>
                 <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Deep Audio Bank</span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Extensive graded audio practice sets with full answer sheets.</p>
+              <p className="text-[11px] text-slate-400 mt-1">Daily international news with synchronized transcripts for oral shadowing.</p>
             </div>
             <div className="flex items-center space-x-1 text-emerald-400 font-medium text-[11px] mt-2 pt-2 border-t border-slate-800">
               <span>Launch Audio Drills</span>
@@ -123,47 +124,77 @@ export const ExamHub: React.FC = () => {
         </div>
       </div>
 
-      {/* TEF vs TCF Head-to-Head Architectural Comparison */}
+      {/* CRITICAL IRCC FILING WARNING ALERT */}
+      <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex items-start space-x-3 text-xs text-amber-200">
+        <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+        <div className="space-y-1 leading-relaxed">
+          <div className="font-bold text-amber-300 text-sm flex items-center space-x-1.5">
+            <span>Critical IRCC Express Entry Score Warning</span>
+          </div>
+          <p>
+            When entering TEF Canada results into your Express Entry profile, <strong className="text-white underline">you must enter the "Équivalence ancien score" column</strong> (Reading /300, Listening /360, Writing /450, Speaking /450). 
+            <strong className="text-white"> DO NOT enter the "Score / 699" column</strong>. IRCC states that /699 values are incompatible with Express Entry and submitting them may cause your application to be rejected.
+          </p>
+          <div className="pt-1">
+            <a 
+              href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-requirements/language-testing.html" 
+              target="_blank" 
+              rel="noreferrer"
+              className="text-sky-400 hover:underline font-mono inline-flex items-center space-x-1"
+            >
+              <span>Source: Government of Canada (Canada.ca) Language Testing Criteria</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* VERIFIED IRCC NCLC 7 SCORE TABLE */}
       <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        <div className="flex items-center space-x-2">
-          <Scale className="w-4 h-4 text-sky-400" />
-          <h2 className="text-sm font-bold text-white">TEF Canada vs TCF Canada: The Critical Differences</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Scale className="w-4 h-4 text-sky-400" />
+            <h2 className="text-sm font-bold text-white">Verified IRCC Language Equivalency Standards (CLB / NCLC 7)</h2>
+          </div>
+          <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+            Official Canada.ca Data
+          </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase text-[10px]">
-                <th className="py-2.5 px-3">Exam Parameter</th>
-                <th className="py-2.5 px-3 text-rose-300">TEF Canada (CCIP)</th>
-                <th className="py-2.5 px-3 text-sky-300">TCF Canada (FEI)</th>
-                <th className="py-2.5 px-3 text-amber-300">Impact on Your Practice</th>
+                <th className="py-3 px-3">Skill Ability</th>
+                <th className="py-3 px-3 text-rose-300">TEF Canada (Équivalence Ancien Score)</th>
+                <th className="py-3 px-3 text-sky-300">TCF Canada (FEI Score)</th>
+                <th className="py-3 px-3 text-amber-300">Target Benchmark Note</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-slate-300">
               <tr>
-                <td className="py-2.5 px-3 font-semibold text-white">Listening (CO) Audio Playback</td>
-                <td className="py-2.5 px-3 text-rose-200"><strong>Single-Pass Only:</strong> Every audio clip plays strictly once.</td>
-                <td className="py-2.5 px-3 text-sky-200"><strong>Mixed Playback:</strong> Short items play once; longer conversations play twice.</td>
-                <td className="py-2.5 px-3 text-amber-200">TEF requires immediate note-taking reflexes; TCF gives a safety pass on longer audio.</td>
+                <td className="py-3 px-3 font-semibold text-white">Compréhension de l'écrit (Reading)</td>
+                <td className="py-3 px-3 text-rose-200 font-mono"><strong>207 – 232</strong> <span className="text-slate-400">/ 300</span> (Min: 207)</td>
+                <td className="py-3 px-3 text-sky-200 font-mono"><strong>453 – 498</strong> <span className="text-slate-400">/ 699</span> (Min: 453)</td>
+                <td className="py-3 px-3 text-slate-300">Requires ~35 min speed-reading and formal vocabulary.</td>
               </tr>
               <tr>
-                <td className="py-2.5 px-3 font-semibold text-white">Expression Orale (Speaking)</td>
-                <td className="py-2.5 px-3 text-rose-200"><strong>2 Sections:</strong> Sec A (Inquiry / Vous / 5m) + Sec B (Persuading friend / Tu / 10m).</td>
-                <td className="py-2.5 px-3 text-sky-200"><strong>3 Tasks:</strong> Task 1 (Self Intro / 2m) + Task 2 (Inquiry / 3.5m) + Task 3 (Debate / 4.5m).</td>
-                <td className="py-2.5 px-3 text-amber-200">TEF focuses on prolonged persuasion debate; TCF tests broad conversational range.</td>
+                <td className="py-3 px-3 font-semibold text-white">Compréhension de l'oral (Listening)</td>
+                <td className="py-3 px-3 text-rose-200 font-mono"><strong>249 – 279</strong> <span className="text-slate-400">/ 360</span> (Min: 249)</td>
+                <td className="py-3 px-3 text-sky-200 font-mono"><strong>458 – 502</strong> <span className="text-slate-400">/ 699</span> (Min: 458)</td>
+                <td className="py-3 px-3 text-slate-300">TEF = Single-pass audio only; TCF = Mixed single/double pass.</td>
               </tr>
               <tr>
-                <td className="py-2.5 px-3 font-semibold text-white">Expression Écrite (Writing)</td>
-                <td className="py-2.5 px-3 text-rose-200"><strong>2 Sections:</strong> Sec A (Fait divers continuation ~100w) + Sec B (Formal letter ~220w).</td>
-                <td className="py-2.5 px-3 text-sky-200"><strong>3 Tasks:</strong> Task 1 (Short message 60-120w) + Task 2 (Letter/story 120-150w) + Task 3 (Comparison essay 120-180w).</td>
-                <td className="py-2.5 px-3 text-amber-200">TEF requires mastering the formal argumentative letter format; TCF requires speed across 3 tasks.</td>
+                <td className="py-3 px-3 font-semibold text-white">Expression écrite (Writing)</td>
+                <td className="py-3 px-3 text-rose-200 font-mono"><strong>310 – 348</strong> <span className="text-slate-400">/ 450</span> (Min: 310)</td>
+                <td className="py-3 px-3 text-sky-200 font-mono"><strong>10 – 11</strong> <span className="text-slate-400">/ 20</span> (Min: 10)</td>
+                <td className="py-3 px-3 text-slate-300">TEF = 1 Fait divers + 1 Formal letter; TCF = 3 short tasks.</td>
               </tr>
               <tr>
-                <td className="py-2.5 px-3 font-semibold text-white">Target Score for NCLC 7 (Express Entry)</td>
-                <td className="py-2.5 px-3 text-rose-200">CO: 248+ / CE: 248+ / EO: 310+ / EE: 310+</td>
-                <td className="py-2.5 px-3 text-sky-200">CO: 458-502 / CE: 453-499 / EO: 10-11 / EE: 10-11</td>
-                <td className="py-2.5 px-3 text-amber-200">Both equate to standard CEFR B2 proficiency.</td>
+                <td className="py-3 px-3 font-semibold text-white">Expression orale (Speaking)</td>
+                <td className="py-3 px-3 text-rose-200 font-mono"><strong>310 – 348</strong> <span className="text-slate-400">/ 450</span> (Min: 310)</td>
+                <td className="py-3 px-3 text-sky-200 font-mono"><strong>10 – 11</strong> <span className="text-slate-400">/ 20</span> (Min: 10)</td>
+                <td className="py-3 px-3 text-slate-300">TEF = 5m Inquiry (Vous) + 10m Persuasion (Tu); TCF = 3 tasks.</td>
               </tr>
             </tbody>
           </table>
@@ -228,7 +259,7 @@ export const ExamHub: React.FC = () => {
 
           {/* Sample Prompt */}
           <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
-            <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider block mb-1">Official Sample Prompt</span>
+            <span className="text-[11px] font-semibold text-rose-400 uppercase tracking-wider block mb-1">Official Style Prompt</span>
             <p className="text-xs sm:text-sm text-slate-200 font-medium italic">
               "{currentTemplate.samplePrompt}"
             </p>
