@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   HelpCircle, 
   Compass, 
@@ -103,7 +103,7 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({
               </div>
 
               <div className="p-3.5 rounded-xl bg-sky-950/30 border border-sky-500/20 text-sky-200">
-                <strong className="text-sky-300">100% Free & Persistent:</strong> Your progress and profiles are saved locally in your browser (`localStorage`). You can also export offline JSON backups anytime.
+                <strong className="text-sky-300">100% Free & Persistent:</strong> Your progress and profiles are saved in a secure cloud database (Supabase). Access your profile from any device using your personal sync link.
               </div>
             </div>
           )}
@@ -169,10 +169,10 @@ export const HelpGuideModal: React.FC<HelpGuideModalProps> = ({
                 Do not translate word-for-word into English! Instead, map concepts to your multilingual intuition:
               </p>
               <ul className="space-y-2 pl-2">
-                <li><strong className="text-amber-400">Grammatical Gender:</strong> Inanimate objects in French have gender (*la table, le livre*). Use your Hindi mental model (*किताब f, कमरा m*).</li>
-                <li><strong className="text-sky-400">Tu vs Vous:</strong> Exact match with Hindi (*तू/तुम vs आप*) and Telugu (*నువ్వు vs మీరు*).</li>
-                <li><strong className="text-purple-400">Nasal Vowels:</strong> Directly equivalent to Hindi *Chandrabindu* (माँ, चाँद).</li>
-                <li><strong className="text-emerald-400">Latin Cognates:</strong> ~35% of English vocabulary carries over into French (*-tion, -ty $\to$ -té*).</li>
+                <li><strong className="text-amber-400">Grammatical Gender:</strong> Every French noun is masculine or feminine (<em>la table, le livre</em>). Always memorize nouns with their article.</li>
+                <li><strong className="text-sky-400">Tu vs Vous:</strong> Tu = informal "you" (friends); Vous = formal "you" (strangers, examiners). Never mix registers in exams.</li>
+                <li><strong className="text-purple-400">Nasal Vowels:</strong> French nasal vowels (an, in, on, un) release air through both nose and mouth without sounding the final N/M.</li>
+                <li><strong className="text-emerald-400">Latin Cognates:</strong> ~35% of English vocabulary carries over into French (<em>-tion, -ty → -té, -able → -able</em>).</li>
               </ul>
             </div>
           )}

@@ -3,7 +3,7 @@
     "id": "tv5-tcf-simulator",
     "title": "TV5Monde TCF Canada Digital Exam Simulator",
     "creatorOrSource": "TV5Monde & France Éducation international",
-    "url": "https://apprendre.tv5monde.com/fr/exercices/tcf",
+    "url": "https://apprendre.tv5monde.com/fr/exercices/b1-intermediaire",
     "badge": "Deep Free Question Bank",
     "cefrLevels": [
       "A2",
@@ -34,7 +34,7 @@
     "id": "rfi-savoirs-tcf",
     "title": "RFI Savoirs - Entraînement au TCF (Free Audio Mock Bank)",
     "creatorOrSource": "Radio France Internationale & FEI",
-    "url": "https://francaisfacile.rfi.fr/fr/enseigner/recherche/activite/entrainement-au-tcf",
+    "url": "https://savoirs.rfi.fr/fr/apprendre-enseigner/langue-francaise/tcf-test-de-connaissance-du-francais",
     "badge": "Official Audio Bank",
     "cefrLevels": [
       "A2",
@@ -57,14 +57,14 @@
     "description": "Extensive bank of free graded listening tests with authentic broadcast audio, answer sheets, and complete transcripts.",
     "whyItWorks": "Tests your comprehension of radio announcements, interviews, and public debates with authentic background sound.",
     "depthDisclaimer": "Deep Practice Bank: Extensive archive of past listening tests.",
-    "notesForIndianLearners": "Indian learners often miss subtle negative particles in fast radio audio; use these transcripts to check missed items.",
+    "notesForIndianLearners": "Learners often miss subtle negative particles in fast radio audio; use these transcripts to check missed items.",
     "actionGuide": "Listen once without pause, answer questions on paper, then check against transcript."
   },
   {
     "id": "fei-tcf-samples",
     "title": "France Éducation international (FEI) Official TCF Canada Sample Kit",
     "creatorOrSource": "France Éducation international (French Ministry of Education)",
-    "url": "https://www.france-education-international.fr/tcf-canada",
+    "url": "https://www.france-education-international.fr/hub/tcf",
     "badge": "Official Format Benchmark",
     "cefrLevels": [
       "B1",
@@ -148,7 +148,7 @@
     ],
     "description": "10-minute daily international news bulletin with simultaneous full written transcripts.",
     "whyItWorks": "Essential for **vocal shadowing**: read the transcript aloud while matching native radio speed and intonation.",
-    "notesForIndianLearners": "Indian speakers often pause between words; shadowing this broadcast trains French *enchaînement* and continuous breath groups.",
+    "notesForIndianLearners": "Many learners pause between words; shadowing this broadcast trains French enchaînement and continuous breath groups.",
     "actionGuide": "Listen blind on Day 1, review unknown vocab on Day 2, and shadow aloud with audio on Day 3."
   },
   {
@@ -209,7 +209,7 @@
     ],
     "description": "Interactive verb conjugation drills covering regular and irregular stems (*présent, passé composé, imparfait, subjonctif*).",
     "whyItWorks": "Conjugation hesitation is the #1 cause of stutters in Expression Orale. Automated drills build muscle memory reflexes.",
-    "notesForIndianLearners": "Hindi verb conjugations agree with gender and number; French agrees strictly with grammatical person.",
+    "notesForIndianLearners": "Verb conjugations in many languages agree with gender; French agrees strictly with grammatical person.",
     "actionGuide": "Complete 10 rapid-fire verb drills every morning before touching other media."
   },
   {
@@ -240,7 +240,7 @@
     ],
     "description": "Indexed CEFR A1-C1 grammar guides with concise English explanations, quizzes, and comparison tables.",
     "whyItWorks": "Pinpoints subtle grammar distinctions: *Passé Composé vs Imparfait*, *Subjonctif triggers*, *Pronouns Y and EN*.",
-    "notesForIndianLearners": "Bookmark the Passé Composé vs Imparfait guide — maps directly to Hindi completed past (किया) vs habitual past (करता था).",
+    "notesForIndianLearners": "Bookmark the Passé Composé vs Imparfait guide — it maps to completed past vs habitual/ongoing past in most languages.",
     "actionGuide": "When encountering an unfamiliar grammar structure in reading/listening, look up its specific rule page here."
   },
   {
@@ -299,7 +299,7 @@
     "prerequisiteMilestoneIds": [],
     "description": "Systematic mouth anatomy, IPA vowel drills, nasal vowel production, and rules for silent final consonants.",
     "whyItWorks": "Prevents English phonetic interference from fossilizing into bad pronunciation habits.",
-    "notesForIndianLearners": "Telugu consonants have strict dental vs retroflex distinctions; French *t, d* are strictly dental (tongue against teeth).",
+    "notesForIndianLearners": "French t, d are strictly dental (tongue against upper front teeth), not retroflex. Practice this distinction carefully.",
     "actionGuide": "Watch in front of a mirror and practice vocalizing until nasal vowel distinctions feel natural."
   },
   {

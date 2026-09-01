@@ -1,4 +1,4 @@
-﻿import { CEFRLevel, DailyTask, Milestone, ResourceItem, SkillType, MediaFormat, ExamTarget } from '../types/curriculum';
+import { CEFRLevel, DailyTask, Milestone, ResourceItem, SkillType, MediaFormat, ExamTarget } from '../types/curriculum';
 import { UserPreferences, UserProfile, SecondaryLanguageBridge } from '../types/preferences';
 import resourcesData from '../data/resources.json';
 import milestonesData from '../data/milestones.json';
@@ -365,7 +365,14 @@ export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
       else score -= 100;
 
       if (r.cefrLevels.includes(level)) score += 50;
-      if (preferredFormatList.includes(r.format)) score += 25;
+      const userSelectableFormats: MediaFormat[] = ['podcast', 'youtube', 'web_app', 'book_pdf'];
+      if (preferredFormatList.includes(r.format)) {
+        score += 60;
+      } else if (userSelectableFormats.includes(r.format)) {
+        // User-selectable format but user didn't select it — penalize
+        score -= 80;
+      }
+      // else: non-selectable formats like 'flashcards', 'audio_transcript' get no penalty
       if (mustBeDialect) {
         if (r.dialect === mustBeDialect) score += 80;
         else score -= 50;

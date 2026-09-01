@@ -1,4 +1,4 @@
-﻿import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UserProfile, UserPreferences, StudyLogEntry, SecondaryLanguageBridge } from '../types/preferences';
 import { MediaFormat } from '../types/curriculum';
 import { DailyTask } from '../types/curriculum';
@@ -218,7 +218,7 @@ export async function createCloudProfile(
   preferences: UserPreferences,
   desiredSlug?: string
 ): Promise<UserProfile> {
-  const slug = desiredSlug ? slugify(desiredSlug) : await generateUniqueSlug(name);
+  const slug = await generateUniqueSlug(desiredSlug || name);
 
   const initialProfileSkeleton: UserProfile = {
     id: slug,

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   BookOpen, 
   Search, 
@@ -105,7 +105,7 @@ export const ResourceCatalog: React.FC<ResourceCatalogProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
           <input
             type="text"
-            placeholder="Search keywords, grammar, Hindi/Telugu notes..."
+            placeholder="Search keywords, grammar, notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
