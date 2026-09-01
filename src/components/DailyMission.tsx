@@ -197,7 +197,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
         <div className="flex items-center space-x-2 text-xs text-slate-300">
           <Smartphone className="w-4 h-4 text-sky-400 flex-shrink-0" />
           <span>
-            Access on mobile with link: <code className="bg-slate-950 px-2 py-0.5 rounded text-sky-300 font-mono">?user={activeProfile.id}</code>
+            Access on any device with link: <code className="bg-slate-950 px-2 py-0.5 rounded text-sky-300 font-mono">?user={activeProfile.id}</code>
           </span>
         </div>
 
@@ -207,7 +207,7 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
             className="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 text-xs font-semibold transition"
           >
             {copiedSyncLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span>{copiedSyncLink ? 'Sync Link Copied!' : 'Copy Mobile Sync Link'}</span>
+            <span>{copiedSyncLink ? 'Sync Link Copied!' : 'Copy My Sync Link'}</span>
           </button>
 
           <button

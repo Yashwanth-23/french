@@ -181,7 +181,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                 className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition shadow-md shadow-sky-500/20"
               >
                 {shareCopied ? <Check className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />}
-                <span>{shareCopied ? 'Link Copied!' : 'Copy Mobile Link'}</span>
+                <span>{shareCopied ? 'Link Copied!' : 'Copy My Sync Link'}</span>
               </button>
 
               <button
