@@ -23,7 +23,8 @@ import {
 } from 'lucide-react';
 import { UserProfile } from '../types/preferences';
 import { calculateEstimatedTargetDate } from '../engine/recommender';
-import { completeTaskAndLog, appendBonusTasksInCloud, regenerateQueueInCloud } from '../engine/dataService';
+import { completeTaskAndLog, undoCompleteTaskAndLog, appendBonusTasksInCloud, regenerateQueueInCloud } from '../engine/dataService';
+import { StudyLogEntry } from '../types/preferences';
 import { DailyTask } from '../types/curriculum';
 
 interface DailyMissionProps {
@@ -77,14 +78,36 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
     setIsTimerRunning(true);
   };
 
+    const [recentCompletedEntry, setRecentCompletedEntry] = useState<StudyLogEntry | null>(null);
+
   const handleCompleteTask = async (taskId: string) => {
     try {
+      const task = (activeProfile.activeTaskQueue || []).find(t => t.id === taskId);
       const updated = await completeTaskAndLog(activeProfile.id, taskId);
       if (updated) {
         onProfileUpdate(updated);
+        if (task) {
+          const entry = (updated.completedHistory || [])[0];
+          if (entry) {
+            setRecentCompletedEntry(entry);
+            setTimeout(() => setRecentCompletedEntry(null), 7000);
+          }
+        }
       }
     } catch (e) {
       console.error('Error completing task:', e);
+    }
+  };
+
+  const handleUndoTask = async (logEntryId: string) => {
+    try {
+      const updated = await undoCompleteTaskAndLog(activeProfile.id, logEntryId);
+      if (updated) {
+        onProfileUpdate(updated);
+        setRecentCompletedEntry(null);
+      }
+    } catch (e) {
+      console.error('Error undoing task:', e);
     }
   };
 
@@ -448,13 +471,28 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
                 </div>
               ) : (
                 (activeProfile.completedHistory || []).map(entry => (
-                  <div key={entry.id} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+                  <div key={entry.id} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs gap-3">
                     <div>
                       <div className="font-bold text-white">{entry.taskTitle}</div>
                       <div className="text-[11px] text-slate-400 font-mono">
                         {entry.resourceTitle} • <span className="text-sky-400">{entry.skill}</span>
                       </div>
                     </div>
+                    <div className="flex items-center space-x-3 flex-shrink-0">
+                      <div className="text-right font-mono">
+                        <span className="text-emerald-400 font-bold">+{entry.durationMinutes}m</span>
+                        <div className="text-[10px] text-slate-500">{new Date(entry.completedAt).toLocaleDateString()}</div>
+                      </div>
+                      <button
+                        onClick={() => handleUndoTask(entry.id)}
+                        className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 hover:border-amber-500/40 transition flex items-center space-x-1"
+                        title="Uncheck task and return to active queue"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-semibold">Uncheck</span>
+                      </button>
+                    </div>
+                  </div>
                     <div className="text-right font-mono">
                       <span className="text-emerald-400 font-bold">+{entry.durationMinutes}m</span>
                       <div className="text-[10px] text-slate-500">{new Date(entry.completedAt).toLocaleDateString()}</div>
@@ -503,7 +541,23 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
           <p className="text-xs text-slate-400 mt-1">Full 800-hour dependency tree, grammar checkpoints, and milestones.</p>
         </button>
       </div>
-
+      {/* Undo Toast Notification */}
+      {recentCompletedEntry && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl flex items-center space-x-3 text-xs animate-in slide-in-from-bottom-3 duration-200">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <div>
+            <div className="font-bold text-white">Task Checked Off!</div>
+            <div className="text-slate-400 text-[11px]">+{recentCompletedEntry.durationMinutes}m added to cloud study total</div>
+          </div>
+          <button
+            onClick={() => handleUndoTask(recentCompletedEntry.id)}
+            className="ml-3 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold hover:bg-amber-500/30 transition flex items-center space-x-1 flex-shrink-0"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Uncheck</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

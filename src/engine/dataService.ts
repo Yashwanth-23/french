@@ -326,6 +326,45 @@ export async function updateExistingProfilePreferences(
   return await saveProfileToCloud(updatedProfileSkeleton);
 }
 
+
+export async function undoCompleteTaskAndLog(slug: string, logEntryId: string): Promise<UserProfile | null> {
+  const profile = await fetchProfile(slug);
+  if (!profile) return null;
+
+  const history = profile.completedHistory || [];
+  const logIndex = history.findIndex(h => h.id === logEntryId);
+  if (logIndex === -1) return profile;
+
+  const entry = history[logIndex];
+
+  // Reconstruct task from log entry
+  const restoredTask: DailyTask = {
+    id: entry.taskId || `task-restored-${Date.now()}`,
+    title: entry.taskTitle,
+    resourceId: 'restored-resource',
+    resourceTitle: entry.resourceTitle,
+    resourceUrl: 'https://apprendre.tv5monde.com/fr',
+    durationMinutes: entry.durationMinutes,
+    skill: entry.skill as any,
+    nature: 'drill_conjugation',
+    instructions: 'Restored study session task.',
+    completed: false
+  };
+
+  const nextHistory = history.filter(h => h.id !== logEntryId);
+  const nextQueue = [restoredTask, ...(profile.activeTaskQueue || [])];
+  const nextMinutes = Math.max(0, (profile.totalMinutesLogged || 0) - entry.durationMinutes);
+
+  const updatedProfile: UserProfile = {
+    ...profile,
+    activeTaskQueue: nextQueue,
+    completedHistory: nextHistory,
+    totalMinutesLogged: nextMinutes
+  };
+
+  return await saveProfileToCloud(updatedProfile);
+}
+
 export async function completeTaskAndLog(slug: string, taskId: string): Promise<UserProfile | null> {
   const profile = await fetchProfile(slug);
   if (!profile) return null;
