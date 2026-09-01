@@ -11,7 +11,8 @@ import {
   Globe, 
   X,
   Smartphone,
-  Languages
+  Languages,
+  Settings
 } from 'lucide-react';
 import { UserProfile, UserPreferences, SecondaryLanguageBridge } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
@@ -26,13 +27,15 @@ interface ProfileSwitcherProps {
   onClose: () => void;
   activeProfile: UserProfile;
   onProfileChanged: (profile: UserProfile) => void;
+  onOpenFullOnboarding: () => void;
 }
 
 export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
   isOpen,
   onClose,
   activeProfile,
-  onProfileChanged
+  onProfileChanged,
+  onOpenFullOnboarding
 }) => {
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -98,7 +101,12 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
       tagline: `${(minutes / 60).toFixed(1)}h / Day • ${activeProfile.preferences.targetExam.replace('_', ' ')} Focus`
     };
     await saveProfileToCloud(updated);
-    onProfileChanged(updated);
+    const refreshed = await regenerateQueueInCloud(activeProfile.id);
+    if (refreshed) {
+      onProfileChanged(refreshed);
+    } else {
+      onProfileChanged(updated);
+    }
   };
 
   const handleToggleFormat = async (format: MediaFormat) => {
@@ -143,7 +151,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/80">
           <div className="flex items-center space-x-2">
             <Users className="w-5 h-5 text-sky-400" />
-            <h2 className="text-base font-bold text-white">Cloud Profile & Linguistic Settings</h2>
+            <h2 className="text-base font-bold text-white">Study Profile & Linguistic Settings</h2>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
@@ -167,13 +175,27 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
               </p>
             </div>
 
-            <button
-              onClick={handleShareLink}
-              className="flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition shadow-md shadow-sky-500/20"
-            >
-              {shareCopied ? <Check className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />}
-              <span>{shareCopied ? 'Link Copied!' : 'Copy Mobile Sync Link'}</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleShareLink}
+                className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition shadow-md shadow-sky-500/20"
+              >
+                {shareCopied ? <Check className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />}
+                <span>{shareCopied ? 'Link Copied!' : 'Copy Mobile Link'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenFullOnboarding();
+                }}
+                className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
+                title="Re-run Setup Wizard"
+              >
+                <Settings className="w-3.5 h-3.5 text-sky-400" />
+                <span>Reconfigure All</span>
+              </button>
+            </div>
           </div>
 
           {/* Example Language / Native Bridge Selector */}
@@ -183,7 +205,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
               <span>Example Notes & Linguistic Comparison</span>
             </div>
             <p className="text-[11px] text-slate-400">
-              Clean English is the default base for all explanations. Select an optional native parallel:
+              Clean English is the standard base. Click to select your preferred secondary comparison bridge:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
               {[
@@ -201,7 +223,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                     onClick={() => handleUpdateSecondaryBridge(item.id as SecondaryLanguageBridge)}
                     className={`p-2.5 rounded-xl border text-left transition ${
                       isSelected
-                        ? 'bg-sky-500/20 text-sky-300 border-sky-500 font-bold shadow-sm'
+                        ? 'bg-sky-500/20 text-sky-300 border-sky-500 font-bold shadow-sm ring-1 ring-sky-500/40'
                         : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
                     }`}
                   >

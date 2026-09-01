@@ -190,6 +190,7 @@ export function App() {
           onClose={() => setIsProfileModalOpen(false)}
           activeProfile={activeProfile}
           onProfileChanged={handleProfileCreatedOrUpdated}
+          onOpenFullOnboarding={() => setIsOnboardingModalOpen(true)}
         />
       )}
 
