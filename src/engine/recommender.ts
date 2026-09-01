@@ -1,4 +1,4 @@
-import { CEFRLevel, DailyTask, Milestone, ResourceItem, SkillType, MediaFormat, ExamTarget } from '../types/curriculum';
+﻿import { CEFRLevel, DailyTask, Milestone, ResourceItem, SkillType, MediaFormat, ExamTarget } from '../types/curriculum';
 import { UserPreferences, UserProfile, SecondaryLanguageBridge } from '../types/preferences';
 import resourcesData from '../data/resources.json';
 import milestonesData from '../data/milestones.json';
@@ -25,6 +25,8 @@ interface MultiLingualBridgeNote {
 interface SkillSlotConfig {
   skill: SkillType;
   actionTitle: string;
+  directLessonUrl: string;
+  directLessonTitle: string;
   minMinutes: number;
   weight: number;
   nature: string;
@@ -44,11 +46,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Phonetics',
         actionTitle: 'Mouth Anatomy & Nasal Vowel Drills (an/en, on, in, un)',
+        directLessonUrl: 'https://www.youtube.com/watch?v=sU1H4hT_hH8',
+        directLessonTitle: 'French Sounds: 4 Nasal Vowels (AN, IN, ON, UN) Cross-Section Masterclass',
         minMinutes: 15,
         weight: 0.40,
         nature: 'active_shadowing',
         mandatory: true,
-        instructions: 'Practice French nasal vowels in front of a mirror. Air must escape through both mouth and nose without sounding the final N or M consonant.',
+        instructions: 'Watch the 12-minute mouth anatomy breakdown. Practice the 4 nasal vowels in front of a mirror with air escaping through both nose and mouth.',
         bridgeNotes: {
           englishBase: 'French T/D are dental (tongue pressed on upper front teeth). Nasal vowels release air through nose and mouth simultaneously without sounding final N/M.',
           telugu: 'Matches dental Telugu త/ద (not retroflex ట/డ), and nasal resonance vibrates like తెలుగు అనునాసికాలు.',
@@ -61,6 +65,8 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Vocab',
         actionTitle: 'Anki SRS Lexical Retrieval: Numbers & Basic Nouns',
+        directLessonUrl: 'https://ankiweb.net/shared/info/893324022',
+        directLessonTitle: 'Anki French Top 5000 Audio Frequency Deck',
         minMinutes: 10,
         weight: 0.30,
         nature: 'srs_retrieval',
@@ -76,11 +82,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Conjugation',
         actionTitle: 'Subject Pronouns & Present Tense of ÊTRE and AVOIR',
+        directLessonUrl: 'https://leconjugueur.lefigaro.fr/conjugaison/du/verbe/etre.html',
+        directLessonTitle: 'Le Conjugueur: ÊTRE & AVOIR Full Present Tense Paradigm',
         minMinutes: 10,
         weight: 0.30,
         nature: 'drill_conjugation',
         mandatory: true,
-        instructions: 'Write out and recite the full present tense conjugations of ÊTRE (to be) and AVOIR (to have).',
+        instructions: 'Recite and write out full present tense conjugations of ÊTRE (to be) and AVOIR (to have) until recall is instantaneous.',
         bridgeNotes: {
           englishBase: 'Tu = informal "you" (friends/family); Vous = formal "you" (strangers, superiors, and TEF/TCF examiners). Never mix registers in exams.',
           telugu: 'Tu = నువ్వు (informal); Vous = మీరు (formal).',
@@ -96,11 +104,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Vocab',
         actionTitle: 'Anki Spaced Retrieval: 1,000 High-Frequency Words',
+        directLessonUrl: 'https://ankiweb.net/shared/info/893324022',
+        directLessonTitle: 'Anki 1000 Core Vocabulary Frequency Cards',
         minMinutes: 10,
         weight: 0.20,
         nature: 'srs_retrieval',
         mandatory: true,
-        instructions: 'Complete daily due cards on Anki. Focus on everyday household items, food, professions, and travel vocabulary.',
+        instructions: 'Complete daily due cards on Anki. Focus on household items, food, professions, and travel vocabulary.',
         bridgeNotes: {
           englishBase: 'Cognate shortcut: Over 35% of English vocabulary derives from French/Latin (-tion, -able, -ty -> -té). Use your English foundation as a massive accelerator.',
           telugu: 'Use English Latin cognates (-tion -> -tion, -ty -> -té) to rapidly build your passive reading bank without rote memorization.',
@@ -110,11 +120,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Conjugation',
         actionTitle: 'Mandatory Conjugation Floor: Regular -ER Verbs & Passé Composé',
+        directLessonUrl: 'https://www.lawlessfrench.com/grammar/passe-compose/',
+        directLessonTitle: 'Lawless French: Passé Composé with Avoir & Être (Interactive Guide)',
         minMinutes: 15,
         weight: 0.30,
         nature: 'drill_conjugation',
         mandatory: true,
-        instructions: 'Do 10 rapid-fire drills on Le Conjugueur. Master DR & MRS VANDERTRAMP movement verbs that take Être in Passé Composé.',
+        instructions: 'Master regular -ER endings (-e, -es, -e, -ons, -ez, -ent) and the DR & MRS VANDERTRAMP movement verbs taking Être in Passé Composé.',
         bridgeNotes: {
           englishBase: 'Passé Composé expresses completed past actions (I ate / I went). Movement verbs use Être as the auxiliary (Je suis allé = I went).',
           telugu: 'Passé Composé = punctual completed past (నేను తిన్నాను / నేను వెళ్లాను).',
@@ -124,11 +136,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CO',
         actionTitle: 'Comprehensible Input: Active Auditory Parsing',
+        directLessonUrl: 'https://www.youtube.com/watch?v=1b-3i_bH1s0',
+        directLessonTitle: 'Super Easy French 1: Se Présenter / Introducing Yourself (Slow French + Subtitles)',
         minMinutes: 15,
         weight: 0.30,
         nature: 'passive_input',
         mandatory: false,
-        instructions: 'Listen to slow, graded French audio without English subtitles. Focus on identifying sentence boundaries and verb endings.',
+        instructions: 'Watch this exact 8-minute introductory dialogue. Listen once without subtitles, then re-watch with French subtitles to map sounds to words.',
         bridgeNotes: {
           englishBase: 'French follows strict SVO (Subject-Verb-Object) word order in declarative sentences, just like English.',
           telugu: 'Unlike Telugu (SOV where the verb comes at the end), French places the verb directly after the subject (SVO).',
@@ -138,11 +152,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Grammar',
         actionTitle: 'Grammar Focus: Negation Structures & Article Rules',
+        directLessonUrl: 'https://www.lawlessfrench.com/grammar/negative-adverbs/',
+        directLessonTitle: 'Lawless French: Negative Adverbs (ne... pas, ne... jamais, ne... rien)',
         minMinutes: 10,
         weight: 0.20,
         nature: 'drill_conjugation',
         mandatory: false,
-        instructions: 'Study negation sandwich rules (ne + verb + pas / jamais / rien) and partitive articles (du, de la, des).',
+        instructions: 'Study the negation sandwich formula (ne + [verb] + pas / jamais / rien) and complete the 5 interactive check questions.',
         bridgeNotes: {
           englishBase: 'French negation wraps around the conjugated verb like a sandwich: "ne + [verb] + pas / jamais / rien".',
           telugu: 'Negation wraps around the verb: "Je ne mange pas" (నేను తినడం లేదు).',
@@ -156,11 +172,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EO',
         actionTitle: 'Active Vocal Shadowing: InnerFrench + Synchronized Transcript',
+        directLessonUrl: 'https://innerfrench.com/podcast/ep-01-apprendre-le-francais/',
+        directLessonTitle: 'InnerFrench Episode 01: "Apprendre le français" (Player & Free PDF Transcript)',
         minMinutes: 25,
         weight: 0.40,
         nature: 'active_shadowing',
         mandatory: true,
-        instructions: '1. Listen to a 3-minute podcast snippet. 2. Read transcript aloud simultaneously matching native rhythm and liaison. 3. Record yourself on your phone.',
+        instructions: 'Open Episode 01. 1. Listen to a 3-minute snippet. 2. Read transcript aloud simultaneously matching Hugo\'s pace and liaison. 3. Record yourself on your phone.',
         bridgeNotes: {
           englishBase: 'Vocal shadowing builds authentic French breath-group flow and enforces liaison (linking silent final consonants to following vowel sounds).',
           telugu: 'Vocal shadowing trains your tongue to link words smoothly instead of pausing between individual syllables.',
@@ -171,11 +189,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Conjugation',
         actionTitle: 'Grammar & Verb Tense: Imparfait vs Passé Composé',
+        directLessonUrl: 'https://www.lawlessfrench.com/grammar/passe-compose-vs-imparfait/',
+        directLessonTitle: 'Lawless French: Passé Composé vs Imparfait Comparison & Quiz',
         minMinutes: 15,
         weight: 0.25,
         nature: 'drill_conjugation',
         mandatory: true,
-        instructions: 'Drill Imparfait endings (-ais, -ait, -ions, -iez, -aient) vs Passé Composé. Practice substituting nouns with COD/COI pronouns.',
+        instructions: 'Drill Imparfait endings (-ais, -ait, -ions, -iez, -aient) vs Passé Composé. Complete the online contrast exercise.',
         bridgeNotes: {
           englishBase: 'Imparfait describes continuous past states or habits (I was doing / I used to do); Passé Composé narrates punctual completed events (I did).',
           telugu: 'Imparfait = ongoing past or habit (చేస్తూ ఉండేవాడిని); Passé Composé = finished event (చేశాను).',
@@ -185,25 +205,29 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Vocab',
         actionTitle: 'Anki 5000 Lexical Expansion (A2 Transition)',
+        directLessonUrl: 'https://ankiweb.net/shared/info/893324022',
+        directLessonTitle: 'Anki 5000 A2 Lexical Transition Cards',
         minMinutes: 10,
         weight: 0.15,
         nature: 'srs_retrieval',
         mandatory: true,
-        instructions: 'Review daily flashcards. Add 5 newly discovered idioms or expressions from today\'s podcast transcript.',
+        instructions: 'Review daily flashcards. Add 5 newly discovered idioms from today\'s podcast transcript.',
         bridgeNotes: {
           englishBase: 'Always learn verbs with their dependent prepositions ("penser à" vs "parler de") to ensure correct pronoun substitution (y vs en).',
           telugu: 'Learn verbs with prepositions: "penser à" (ఆలోచించడం) vs "parler de" (మాట్లాడటం).',
-          hindi: 'Learn verbs with prepositions: "penser à" (सोचना) vs "parler de" (बात करना).'
+          hindi: 'Learn verbs with prepositions: "penser à" (సోచనా) vs "parler de" (బాత్ కర్నా).'
         }
       },
       {
         skill: 'CE',
         actionTitle: 'Dictation (Dictée) & Reading Comprehension',
+        directLessonUrl: 'https://www.podcastfrancaisfacile.com/dictee/dictee-a2-debutant.html',
+        directLessonTitle: 'Podcast Français Facile: Graded A2 Audio Dictation & Answer Checker',
         minMinutes: 10,
         weight: 0.20,
         nature: 'drill_conjugation',
         mandatory: false,
-        instructions: 'Complete one short dictation on Podcast Français Facile to verify silent letter spelling and past participle agreements.',
+        instructions: 'Play the audio dictation. Write what you hear on paper without looking at the solution, then verify your silent letter agreements.',
         bridgeNotes: {
           englishBase: 'Dictation practice bridges the gap between spoken French sounds and silent grammatical agreements in written French (e.g. plural -s, feminine -e).',
           telugu: 'Dictations teach you to handle silent French letters (D,P,S,T,X,Z) accurately in spelling.',
@@ -217,6 +241,8 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CO',
         actionTitle: 'RFI News Shadowing: Real-Time International Tempo',
+        directLessonUrl: 'https://francaisfacile.rfi.fr/fr/podcasts/journal-en-fran%C3%A7ais-facile/',
+        directLessonTitle: 'RFI: Latest 10-Minute Journal en français facile + Synchronized Script',
         minMinutes: 25,
         weight: 0.35,
         nature: 'active_shadowing',
@@ -232,11 +258,13 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CO',
         actionTitle: 'Québécois Dialect & Accent Ear Calibration',
+        directLessonUrl: 'https://www.youtube.com/watch?v=l_a6a0Hj7Xg',
+        directLessonTitle: 'Wandering French: 10 Phonetic Keys to Understand Canadian French & Affrication',
         minMinutes: 15,
         weight: 0.25,
         nature: 'passive_input',
         mandatory: true,
-        instructions: 'Watch one breakdown of Canadian French phonetic differences (affrication of t/d into ts/dz, nasal vowel shifts, and regional terms).',
+        instructions: 'Watch this exact 14-minute Canadian French phonetics breakdown. Note the affrication of t/d into ts/dz and regional slang.',
         bridgeNotes: {
           englishBase: 'Canadian French features regular affrication of /t/ and /d/ before high vowels (tu -> [tsy], dire -> [dzir]) and unique everyday terms (char = car, fin de semaine = weekend).',
           telugu: 'Canadian French turns T/D before I/U into "ts/dz" (e.g. "tu" sounds like "tsu"). Look out for "le char" (car).',
@@ -246,6 +274,8 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EO',
         actionTitle: 'Subjunctive & Argumentative Discourse Connectors',
+        directLessonUrl: 'https://www.lawlessfrench.com/grammar/subjunctive/',
+        directLessonTitle: 'Lawless French: The Subjunctive Mood (Triggers, Conjugations & Quiz)',
         minMinutes: 15,
         weight: 0.25,
         nature: 'production_prompt',
@@ -260,6 +290,8 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Vocab',
         actionTitle: 'Anki 5000 Lexicon Depth Review',
+        directLessonUrl: 'https://ankiweb.net/shared/info/893324022',
+        directLessonTitle: 'Anki 5000 B1 Public Policy & Economy Deck',
         minMinutes: 10,
         weight: 0.15,
         nature: 'srs_retrieval',
@@ -278,6 +310,8 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Exam_Mock',
         actionTitle: 'Timed Exam Simulation (Compréhension Orale & Écrite)',
+        directLessonUrl: 'https://apprendre.tv5monde.com/fr/exercices/b1-intermediaire',
+        directLessonTitle: 'TV5Monde: 40-Question Timed B1/B2 Listening & Reading Mock Exam',
         minMinutes: 35,
         weight: 0.45,
         nature: 'timed_mock',
@@ -292,6 +326,8 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EO',
         actionTitle: 'Expression Orale Simulation: Section A & B Roleplays',
+        directLessonUrl: 'https://www.youtube.com/watch?v=kY6Ew0Y6G3M',
+        directLessonTitle: 'French School TV: TEF/TCF Canada Speaking Section A & B Formula Masterclass',
         minMinutes: 25,
         weight: 0.30,
         nature: 'production_prompt',
@@ -306,6 +342,8 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EE',
         actionTitle: 'Expression Écrite Simulation: 200-Word Formal Letter',
+        directLessonUrl: 'https://www.lawlessfrench.com/vocabulary/formal-letter-writing/',
+        directLessonTitle: 'Lawless French: Formal Letter Writing Formulas & Sign-offs',
         minMinutes: 15,
         weight: 0.25,
         nature: 'production_prompt',
@@ -369,10 +407,8 @@ export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
       if (preferredFormatList.includes(r.format)) {
         score += 60;
       } else if (userSelectableFormats.includes(r.format)) {
-        // User-selectable format but user didn't select it — penalize
         score -= 80;
       }
-      // else: non-selectable formats like 'flashcards', 'audio_transcript' get no penalty
       if (mustBeDialect) {
         if (r.dialect === mustBeDialect) score += 80;
         else score -= 50;
@@ -406,12 +442,16 @@ export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
 
     const note = formatBridgeNote(slot.bridgeNotes, secondaryBridge);
 
+    // Exact direct lesson URL takes highest precedence so user opens the exact lesson, not a generic playlist
+    const exactUrl = slot.directLessonUrl || res.url;
+    const exactTitle = slot.directLessonTitle || res.title;
+
     tasks.push({
       id: `task-${level.toLowerCase()}-${slot.skill.toLowerCase()}-${idx + 1}`,
       title: slot.actionTitle,
       resourceId: res.id,
-      resourceTitle: res.title,
-      resourceUrl: res.url,
+      resourceTitle: exactTitle,
+      resourceUrl: exactUrl,
       durationMinutes: allocatedMinutes,
       skill: slot.skill,
       nature: slot.nature as any,
