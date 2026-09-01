@@ -129,7 +129,7 @@ export function App() {
             )}
 
             {activeTab === 'bridges' && (
-              <IndianBridgeGuide />
+              <IndianBridgeGuide activeProfile={activeProfile} />
             )}
 
             {activeTab === 'exam' && (

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Languages, 
   Search, 
@@ -12,12 +12,31 @@ import {
 } from 'lucide-react';
 import bridgesData from '../data/linguisticBridges.json';
 import { IndianBridgeConcept } from '../types/curriculum';
+import { UserProfile } from '../types/preferences';
 
-export const IndianBridgeGuide: React.FC = () => {
+interface IndianBridgeGuideProps {
+  activeProfile?: UserProfile | null;
+}
+
+export const IndianBridgeGuide: React.FC<IndianBridgeGuideProps> = ({ activeProfile }) => {
   const concepts = bridgesData as IndianBridgeConcept[];
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [activeLangFilter, setActiveLangFilter] = useState<'all' | 'english' | 'spanish' | 'telugu' | 'hindi'>('all');
+
+  // Determine initial filter based on user's selected language bridge
+  const getInitialFilter = (): 'all' | 'english' | 'spanish' | 'telugu' | 'hindi' => {
+    const bridge = activeProfile?.preferences?.secondaryLanguageBridge;
+    if (bridge === 'telugu') return 'telugu';
+    if (bridge === 'hindi') return 'hindi';
+    if (bridge === 'spanish') return 'spanish';
+    return 'english'; // Default to English for 'none' / universal users
+  };
+
+  const [activeLangFilter, setActiveLangFilter] = useState<'all' | 'english' | 'spanish' | 'telugu' | 'hindi'>(getInitialFilter);
+
+  useEffect(() => {
+    setActiveLangFilter(getInitialFilter());
+  }, [activeProfile?.preferences?.secondaryLanguageBridge]);
 
   const filteredConcepts = concepts.filter(c => {
     if (selectedCategory !== 'ALL' && c.category !== selectedCategory) return false;
@@ -59,11 +78,11 @@ export const IndianBridgeGuide: React.FC = () => {
           {/* Language Matrix Badges */}
           <div className="flex flex-wrap gap-1.5 bg-slate-900/90 border border-slate-800 p-2 rounded-2xl">
             {[
-              { id: 'all', label: 'All Bridges' },
-              { id: 'english', label: '🇬🇧 English' },
+              { id: 'english', label: '🇬🇧 English Only' },
               { id: 'spanish', label: '🇪🇸 Spanish' },
               { id: 'telugu', label: '🇮🇳 Telugu' },
               { id: 'hindi', label: '🇮🇳 Hindi' },
+              { id: 'all', label: '🌐 All Bridges' },
             ].map(l => (
               <button
                 key={l.id}
