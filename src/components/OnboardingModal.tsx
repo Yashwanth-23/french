@@ -15,8 +15,8 @@ import {
   Dices,
   Copy,
   CheckCircle2,
-  Smartphone,
-  ExternalLink
+  User,
+  Key
 } from 'lucide-react';
 import { 
   createCloudProfile, 
@@ -41,8 +41,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 }) => {
   const isEditing = Boolean(initialProfile);
 
-  const [name, setName] = useState(initialProfile?.name || '');
-  const [desiredSlug, setDesiredSlug] = useState(initialProfile?.id || '');
+  const [displayName, setDisplayName] = useState(initialProfile?.name || '');
+  const [username, setUsername] = useState(initialProfile?.id || '');
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
   const [slugAvailable, setSlugAvailable] = useState<boolean | null>(true);
   const [dailyMinutes, setDailyMinutes] = useState(initialProfile?.preferences.dailyTimeMinutes || 120);
@@ -60,8 +60,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   // Sync state when initialProfile changes
   useEffect(() => {
     if (initialProfile) {
-      setName(initialProfile.name);
-      setDesiredSlug(initialProfile.id);
+      setDisplayName(initialProfile.name);
+      setUsername(initialProfile.id);
       setDailyMinutes(initialProfile.preferences.dailyTimeMinutes);
       setTargetExam(initialProfile.preferences.targetExam);
       setSelectedFormats(initialProfile.preferences.preferredFormats);
@@ -74,29 +74,23 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   // Real-time slug availability check
   useEffect(() => {
-    if (isEditing || !desiredSlug.trim()) {
+    if (isEditing || !username.trim()) {
       setSlugAvailable(true);
       return;
     }
     const timer = setTimeout(async () => {
       setIsCheckingSlug(true);
-      const available = await checkSlugAvailable(desiredSlug, initialProfile?.id);
+      const cleanSlug = slugify(username);
+      const available = await checkSlugAvailable(cleanSlug, initialProfile?.id);
       setSlugAvailable(available);
       setIsCheckingSlug(false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [desiredSlug, isEditing, initialProfile]);
+  }, [username, isEditing, initialProfile]);
 
   if (!isOpen) return null;
 
-  const handleNameChange = (newName: string) => {
-    setName(newName);
-    if (!isEditing) {
-      setDesiredSlug(slugify(newName));
-    }
-  };
-
-    const handleGenerateRandom = async () => {
+  const handleGenerateRandomHandle = async () => {
     let random = generateRandomHandle();
     let isAvail = await checkSlugAvailable(random);
     let attempts = 0;
@@ -105,8 +99,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       isAvail = await checkSlugAvailable(random);
       attempts++;
     }
-    setName(random);
-    setDesiredSlug(random);
+    setUsername(random);
+    if (!displayName.trim()) {
+      setDisplayName(random);
+    }
     setSlugAvailable(true);
   };
 
@@ -120,10 +116,12 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || isSubmitting) return;
+    if (!displayName.trim() || (!isEditing && !username.trim()) || isSubmitting) return;
+
+    const cleanSlug = isEditing ? initialProfile!.id : slugify(username);
 
     if (!isEditing && slugAvailable === false) {
-      alert(`Username '@${desiredSlug}' is already taken. Please choose another username.`);
+      alert(`Username '@${cleanSlug}' is already taken. Please choose another username.`);
       return;
     }
 
@@ -141,13 +139,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
       let savedProfile: UserProfile;
       if (isEditing && initialProfile) {
-        // Update existing row in Supabase and preserve progress
-        savedProfile = await updateExistingProfilePreferences(initialProfile, name, prefs);
+        // In-place update of display name and preferences, preserving permanent username & study hours
+        savedProfile = await updateExistingProfilePreferences(initialProfile, displayName, prefs);
         onProfileCreated(savedProfile);
         if (onClose) onClose();
       } else {
-        // Create brand new cloud profile
-        savedProfile = await createCloudProfile(name, prefs, desiredSlug);
+        // Create brand new cloud profile with separate display name and primary key username
+        savedProfile = await createCloudProfile(displayName, prefs, cleanSlug);
         const newUrl = `${window.location.origin}${window.location.pathname}?user=${savedProfile.id}`;
         window.history.pushState({ path: newUrl }, '', newUrl);
 
@@ -195,7 +193,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           <div className="space-y-1.5">
             <h2 className="text-2xl font-extrabold text-white">Profile Created Successfully!</h2>
             <p className="text-xs text-slate-300">
-              Welcome, <strong className="text-sky-400">@{createdProfile.id}</strong> ({createdProfile.name}). Your personalized Canadian French plan is ready.
+              Welcome, <strong className="text-white">{createdProfile.name}</strong> (<span className="text-sky-400 font-mono">@{createdProfile.id}</span>). Your plan is ready.
             </p>
           </div>
 
@@ -203,8 +201,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 text-left">
             <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
               <span>Your Private Access URL</span>
-              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                Cloud Sync Ready
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">
+                Cloud Sync Key
               </span>
             </div>
 
@@ -217,7 +215,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 ${
                 linkCopied
                   ? 'bg-emerald-500 text-slate-950'
-                  : 'bg-sky-500 hover:bg-sky-400 text-slate-950'
+                  : 'bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-md shadow-sky-500/20'
               }`}
             >
               {linkCopied ? (
@@ -239,7 +237,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
               <strong className="text-amber-300 block mb-0.5">⚠️ Save & Bookmark This Link:</strong>
-              This URL is your personal access key. Bookmark it or message it to yourself to seamlessly resume your exact study progress and streak from any phone, laptop, or browser without needing a password.
+              This URL is your personal login key. Bookmark it or message it to yourself to seamlessly resume your exact study progress and streak from any phone, laptop, or browser without needing a password.
             </div>
           </div>
 
@@ -281,85 +279,114 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSave} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           
-          {/* Name & Slug */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block">
-                1. Your Name / Unique Handle
+          {/* STEP 1: Separate Display Name & Permanent Username */}
+          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+            
+            {/* 1A. Display Name (Editable anytime) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center space-x-1.5">
+                <User className="w-3.5 h-3.5 text-sky-400" />
+                <span>1. Display Name (Changeable anytime)</span>
               </label>
-              {!isEditing && (
-                <button
-                  type="button"
-                  onClick={handleGenerateRandom}
-                  className="flex items-center space-x-1 text-[11px] text-sky-400 hover:text-sky-300 font-semibold bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 rounded border border-sky-500/30 transition"
-                  title="Generate a unique random username like Reddit"
-                >
-                  <Dices className="w-3 h-3" />
-                  <span>🎲 Random Handle</span>
-                </button>
-              )}
-            </div>
-
-            <div className="relative">
               <input
                 type="text"
-                placeholder="e.g. Alex, Jordan, or enter your username..."
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition ${
-                  !isEditing && slugAvailable === false
-                    ? 'border-rose-500 focus:border-rose-500'
-                    : 'border-slate-700 focus:border-sky-500'
-                }`}
+                placeholder="e.g. Yashwanth, Alex, Marie..."
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
                 required
               />
+              <p className="text-[10px] text-slate-400">
+                Your greeting and dashboard name. Does not have to be unique.
+              </p>
             </div>
 
-            {/* Generated Unique Access Link Preview & Status */}
-            <div className={`flex items-center justify-between text-[11px] font-mono px-3 py-2 rounded-lg border transition ${
-              !isEditing && slugAvailable === false
-                ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400'
-            }`}>
-              <span className="truncate">
-                {isEditing ? (
-                  <span className="flex items-center space-x-1">
-                    <Lock className="w-3 h-3 text-emerald-400" />
-                    <span>Active Sync Key: <strong className="text-emerald-400">?user={initialProfile?.id}</strong></span>
-                  </span>
-                ) : (
-                  <span>Sync Link: <strong className={slugAvailable ? 'text-sky-400' : 'text-rose-400'}>?user={desiredSlug}</strong></span>
+            {/* 1B. Permanent Username / Slug (Primary Key) */}
+            <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center space-x-1.5">
+                  <Key className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Unique Username / URL Key (Permanent)</span>
+                </label>
+                {!isEditing && (
+                  <button
+                    type="button"
+                    onClick={handleGenerateRandomHandle}
+                    className="flex items-center space-x-1 text-[11px] text-sky-400 hover:text-sky-300 font-semibold bg-sky-500/10 hover:bg-sky-500/20 px-2 py-0.5 rounded border border-sky-500/30 transition"
+                    title="Generate a random unique username like Reddit"
+                  >
+                    <Dices className="w-3 h-3" />
+                    <span>🎲 Random Handle</span>
+                  </button>
                 )}
-              </span>
+              </div>
 
-              {!isEditing && (
-                <span className="flex items-center space-x-1 flex-shrink-0 ml-2">
-                  {isCheckingSlug ? (
-                    <RefreshCw className="w-3 h-3 animate-spin text-slate-400" />
-                  ) : slugAvailable === true ? (
-                    <span className="text-emerald-400 flex items-center space-x-0.5 font-sans font-bold">
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Available</span>
+              {isEditing ? (
+                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300 flex items-center justify-between">
+                  <span className="flex items-center space-x-1.5">
+                    <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>@{initialProfile?.id}</span>
+                  </span>
+                  <span className="text-[10px] font-sans text-emerald-400 font-semibold">
+                    Permanent Primary Key (Locked)
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="e.g. yash, alex23, or click Random Handle"
+                      value={username}
+                      onChange={(e) => setUsername(slugify(e.target.value))}
+                      className={`w-full bg-slate-900 border rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition ${
+                        slugAvailable === false
+                          ? 'border-rose-500 focus:border-rose-500'
+                          : 'border-slate-700 focus:border-sky-500'
+                      }`}
+                      required
+                    />
+                  </div>
+
+                  {/* Real-Time Availability & Preview */}
+                  <div className={`flex items-center justify-between text-[11px] font-mono px-3 py-1.5 rounded-lg border transition ${
+                    slugAvailable === false
+                      ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
+                      : 'bg-slate-900 border-slate-800 text-slate-400'
+                  }`}>
+                    <span className="truncate">
+                      Sync URL: <strong className={slugAvailable ? 'text-sky-400' : 'text-rose-400'}>?user={slugify(username) || '...'}</strong>
                     </span>
-                  ) : slugAvailable === false ? (
-                    <span className="text-rose-400 flex items-center space-x-0.5 font-sans font-bold">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      <span>Already Taken — Pick Another</span>
+
+                    <span className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                      {isCheckingSlug ? (
+                        <RefreshCw className="w-3 h-3 animate-spin text-slate-400" />
+                      ) : username.trim() && slugAvailable === true ? (
+                        <span className="text-emerald-400 flex items-center space-x-0.5 font-sans font-bold">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Available</span>
+                        </span>
+                      ) : username.trim() && slugAvailable === false ? (
+                        <span className="text-rose-400 flex items-center space-x-0.5 font-sans font-bold">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>Already Taken</span>
+                        </span>
+                      ) : null}
                     </span>
-                  ) : null}
-                </span>
+                  </div>
+
+                  {slugAvailable === false && (
+                    <p className="text-[11px] text-rose-400 font-medium">
+                      ⚠️ Username <strong>'@{slugify(username)}'</strong> is already registered. Please choose another handle or click <strong>🎲 Random Handle</strong>.
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Warning when username is taken */}
-            {!isEditing && slugAvailable === false && (
-              <p className="text-[11px] text-rose-400 font-medium">
-                ⚠️ Username <strong>'@{desiredSlug}'</strong> is already registered. Please enter a different name or click <strong>🎲 Random Handle</strong> above.
-              </p>
-            )}
           </div>
 
-          {/* Example Language / Native Bridge Selector */}
+          {/* 2. Example Language / Native Bridge Selector */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1">
               2. Example Notes & Linguistic Bridge (English is default)
@@ -392,7 +419,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Target Exam */}
+          {/* 3. Target Exam */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
               3. Canadian Immigration Target Exam
@@ -420,7 +447,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Target Timeline */}
+          {/* 4. Target Timeline */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
               4. Target Exam Timeline
@@ -449,7 +476,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Daily Commitment */}
+          {/* 5. Daily Commitment */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
               5. Daily Time Commitment
@@ -477,7 +504,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Formats */}
+          {/* 6. Formats */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
               6. Preferred Learning Formats
@@ -510,7 +537,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
           </div>
 
-          {/* Starting Level */}
+          {/* 7. Starting Level */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
               7. Starting Baseline Level
@@ -541,7 +568,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={!name.trim() || (!isEditing && slugAvailable === false) || isSubmitting}
+            disabled={!displayName.trim() || (!isEditing && (!username.trim() || slugAvailable === false)) || isSubmitting}
             className="w-full py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs tracking-wide uppercase transition shadow-lg shadow-sky-500/20 flex items-center justify-center space-x-2 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (

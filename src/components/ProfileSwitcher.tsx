@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Plus, 
@@ -12,14 +12,20 @@ import {
   X,
   Smartphone,
   Languages,
-  Settings
+  Settings,
+  User,
+  Key,
+  Dices
 } from 'lucide-react';
 import { UserProfile, UserPreferences, SecondaryLanguageBridge } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
 import { 
   createCloudProfile, 
   saveProfileToCloud, 
-  regenerateQueueInCloud 
+  regenerateQueueInCloud,
+  generateRandomHandle,
+  slugify,
+  checkSlugAvailable
 } from '../engine/dataService';
 
 interface ProfileSwitcherProps {
@@ -40,8 +46,18 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
 
+  // Edit Name State for Active Profile
+  const [editingDisplayName, setEditingDisplayName] = useState(activeProfile.name);
+  const [nameSaved, setNameSaved] = useState(false);
+
+  useEffect(() => {
+    setEditingDisplayName(activeProfile.name);
+  }, [activeProfile.name]);
+
   // New Profile Form State
-  const [newName, setNewName] = useState('');
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [newSlugAvailable, setNewSlugAvailable] = useState<boolean | null>(true);
   const [newMinutes, setNewMinutes] = useState(60);
   const [newFormats, setNewFormats] = useState<MediaFormat[]>(['podcast', 'youtube']);
   const [newLevel, setNewLevel] = useState<CEFRLevel>('A0');
@@ -50,9 +66,44 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
 
   if (!isOpen) return null;
 
+  const handleSaveDisplayName = async () => {
+    if (!editingDisplayName.trim()) return;
+    const updated: UserProfile = {
+      ...activeProfile,
+      name: editingDisplayName.trim()
+    };
+    await saveProfileToCloud(updated);
+    onProfileChanged(updated);
+    setNameSaved(true);
+    setTimeout(() => setNameSaved(false), 2500);
+  };
+
+  const handleGenerateRandomFriendHandle = async () => {
+    let random = generateRandomHandle();
+    let isAvail = await checkSlugAvailable(random);
+    let attempts = 0;
+    while (!isAvail && attempts < 10) {
+      random = generateRandomHandle();
+      isAvail = await checkSlugAvailable(random);
+      attempts++;
+    }
+    setNewUsername(random);
+    if (!newDisplayName.trim()) {
+      setNewDisplayName(random);
+    }
+    setNewSlugAvailable(true);
+  };
+
   const handleCreateProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!newDisplayName.trim() || !newUsername.trim()) return;
+
+    const cleanSlug = slugify(newUsername);
+    const isAvail = await checkSlugAvailable(cleanSlug);
+    if (!isAvail) {
+      alert(`Username '@${cleanSlug}' is already taken. Please choose another username.`);
+      return;
+    }
 
     const prefs: UserPreferences = {
       dailyTimeMinutes: newMinutes,
@@ -64,12 +115,13 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
       skillFrictions: ['EO', 'Conjugation']
     };
 
-    const newProfile = await createCloudProfile(newName.trim(), prefs);
+    const newProfile = await createCloudProfile(newDisplayName.trim(), prefs, cleanSlug);
     const newUrl = `${window.location.origin}${window.location.pathname}?user=${newProfile.id}`;
     window.history.pushState({ path: newUrl }, '', newUrl);
 
     setIsCreatingNew(false);
-    setNewName('');
+    setNewDisplayName('');
+    setNewUsername('');
     onProfileChanged(newProfile);
     onClose();
   };
@@ -161,39 +213,62 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
         {/* Body */}
         <div className="p-6 overflow-y-auto space-y-6">
           
-          {/* Active Cloud Sync Card */}
-          <div className="p-4 rounded-2xl bg-sky-950/40 border border-sky-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-white text-base">@{activeProfile.id}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">
-                  Active Cloud Profile
-                </span>
+          {/* Active Cloud Sync Card with Editable Display Name */}
+          <div className="p-4 rounded-2xl bg-sky-950/40 border border-sky-500/30 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-extrabold text-white text-base font-mono">@{activeProfile.id}</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold">
+                    Permanent Primary Key
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  {activeProfile.tagline}
+                </p>
               </div>
-              <p className="text-xs text-slate-300 mt-1">
-                Name: <strong>{activeProfile.name}</strong> • {activeProfile.tagline}
-              </p>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleShareLink}
+                  className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition shadow-md shadow-sky-500/20"
+                >
+                  {shareCopied ? <Check className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />}
+                  <span>{shareCopied ? 'Link Copied!' : 'Copy My Sync Link'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenFullOnboarding();
+                  }}
+                  className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
+                  title="Re-run Setup Wizard"
+                >
+                  <Settings className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Reconfigure All</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            {/* Editable Display Name Form */}
+            <div className="pt-2 border-t border-sky-500/20 flex items-center space-x-2">
+              <div className="relative flex-1">
+                <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={editingDisplayName}
+                  onChange={(e) => setEditingDisplayName(e.target.value)}
+                  placeholder="Change your display name..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                />
+              </div>
               <button
-                onClick={handleShareLink}
-                className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition shadow-md shadow-sky-500/20"
+                onClick={handleSaveDisplayName}
+                disabled={!editingDisplayName.trim() || editingDisplayName === activeProfile.name}
+                className="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold transition disabled:opacity-40"
               >
-                {shareCopied ? <Check className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5" />}
-                <span>{shareCopied ? 'Link Copied!' : 'Copy My Sync Link'}</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  onClose();
-                  onOpenFullOnboarding();
-                }}
-                className="flex items-center space-x-1 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
-                title="Re-run Setup Wizard"
-              >
-                <Settings className="w-3.5 h-3.5 text-sky-400" />
-                <span>Reconfigure All</span>
+                {nameSaved ? 'Saved!' : 'Update Name'}
               </button>
             </div>
           </div>
@@ -212,7 +287,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                 { id: 'none', label: '🌐 English Only (Universal)', sub: 'Clean English (Standard for US/Global)' },
                 { id: 'telugu', label: '🇮🇳 Telugu + English', sub: 'Adds Telugu parallels (నువ్వు/మీరు, త/ద)' },
                 { id: 'hindi', label: '🇮🇳 Hindi + English', sub: 'Adds Hindi parallels (तू/आप, लिंग)' },
-                { id: 'tamil', label: '🇮🇳 Tamil + English', sub: 'Adds Tamil parallels (நீ/நீங்கள்)' },
+                { id: 'tamil', label: '🇮🇳 Tamil + English', sub: 'Adds Tamil parallels (నీ/நீங்கள்)' },
                 { id: 'spanish', label: '🇪🇸 Spanish + English', sub: 'Adds Spanish cognates (Tú/Usted)' },
               ].map(item => {
                 const currentBridge = activeProfile.preferences.secondaryLanguageBridge || 'none';
@@ -245,13 +320,37 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                 </button>
               </div>
 
+              {/* Display Name */}
               <div>
-                <label className="text-xs text-slate-300 block mb-1">Friend's Name</label>
+                <label className="text-xs text-slate-300 block mb-1">Friend's Display Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Alex, Jordan..."
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="e.g. Marie or Rahul"
+                  value={newDisplayName}
+                  onChange={(e) => setNewDisplayName(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
+                  required
+                />
+              </div>
+
+              {/* Unique Handle */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-slate-300">Unique Username / Link Key</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateRandomFriendHandle}
+                    className="text-[10px] text-sky-400 hover:text-sky-300 font-semibold flex items-center space-x-1"
+                  >
+                    <Dices className="w-3 h-3" />
+                    <span>🎲 Random</span>
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. marie23, or click Random"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(slugify(e.target.value))}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
                   required
                 />
