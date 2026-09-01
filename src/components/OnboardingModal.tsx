@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { UserPreferences, UserProfile, LinguisticAnchor } from '../types/preferences';
+import { UserPreferences, UserProfile, SecondaryLanguageBridge } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
 import { Sparkles, ArrowRight, Headphones, Youtube, BookOpen, Globe, Check, AlertCircle, RefreshCw, Languages } from 'lucide-react';
 import { createCloudProfile, checkSlugAvailable, slugify } from '../engine/dataService';
@@ -26,7 +26,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [selectedFormats, setSelectedFormats] = useState<MediaFormat[]>(['podcast', 'youtube']);
   const [startingLevel, setStartingLevel] = useState<CEFRLevel>('A0');
   const [targetMonths, setTargetMonths] = useState<number>(16);
-  const [linguisticAnchor, setLinguisticAnchor] = useState<LinguisticAnchor>('telugu');
+  const [secondaryBridge, setSecondaryBridge] = useState<SecondaryLanguageBridge>('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         startingLevel,
         targetExamDateMonths: targetMonths,
         targetExam,
-        linguisticAnchor,
+        secondaryLanguageBridge: secondaryBridge,
         skillFrictions: ['EO', 'Conjugation']
       };
 
@@ -105,7 +105,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             {isInitialSetup ? 'Create Your Canadian French Plan' : 'Configure New Study Profile'}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Your custom exam timeline, linguistic anchors, and rolling backlog will sync across all your devices.
+            Set your pace, exam timeline, and optional native language bridges for task notes.
           </p>
         </div>
 
@@ -150,29 +150,34 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             )}
           </div>
 
-          {/* Linguistic Anchor */}
+          {/* Example Language / Native Bridge Selector */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-2">
-              2. Comparative Native Language Anchor
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 block mb-1">
+              2. Example Notes & Linguistic Bridge (English is default)
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-[11px] text-slate-400 mb-2">
+              All explanations are in clean English. You can optionally add native language parallels:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[
-                { id: 'telugu', label: 'Telugu Native', sub: 'నువ్వు/మీరు, త/ద' },
-                { id: 'hindi', label: 'Hindi / National', sub: 'तू/आप, त/द, लिंग' },
-                { id: 'universal_english', label: 'English / Universal', sub: 'Latin Cognates & Syntax' },
+                { id: 'none', label: '🌐 English Only (Universal)', sub: 'Clean standard English (Recommended for US/Global)' },
+                { id: 'telugu', label: '🇮🇳 Telugu + English', sub: 'Adds Telugu parallels (నువ్వు/మీరు, త/ద)' },
+                { id: 'hindi', label: '🇮🇳 Hindi + English', sub: 'Adds Hindi parallels (तू/आप, त/ద, लिंग)' },
+                { id: 'tamil', label: '🇮🇳 Tamil + English', sub: 'Adds Tamil parallels (நீ/நீங்கள், த/ட)' },
+                { id: 'spanish', label: '🇪🇸 Spanish + English', sub: 'Adds Spanish cognates (Tú/Usted)' },
               ].map(item => (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setLinguisticAnchor(item.id as LinguisticAnchor)}
+                  onClick={() => setSecondaryBridge(item.id as SecondaryLanguageBridge)}
                   className={`p-2.5 rounded-xl border text-left transition ${
-                    linguisticAnchor === item.id
-                      ? 'bg-sky-500/20 text-sky-300 border-sky-500 shadow-sm'
+                    secondaryBridge === item.id
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-500 shadow-sm font-semibold'
                       : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
                   }`}
                 >
-                  <div className="text-xs font-bold text-white">{item.label}</div>
-                  <div className="text-[10px] text-slate-400 leading-tight mt-0.5">{item.sub}</div>
+                  <div className="text-xs text-white font-bold">{item.label}</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">{item.sub}</div>
                 </button>
               ))}
             </div>

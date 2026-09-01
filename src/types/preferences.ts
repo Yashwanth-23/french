@@ -1,6 +1,6 @@
 ﻿import { CEFRLevel, MediaFormat, SkillType, ExamTarget, DailyTask } from './curriculum';
 
-export type LinguisticAnchor = 'telugu' | 'hindi' | 'universal_english';
+export type SecondaryLanguageBridge = 'none' | 'telugu' | 'hindi' | 'tamil' | 'spanish';
 
 export interface StudyLogEntry {
   id: string;
@@ -18,7 +18,7 @@ export interface UserPreferences {
   startingLevel: CEFRLevel; // 'A0', 'A1', 'A2', 'B1'
   targetExamDateMonths: number; // 6, 12, 16, 24
   targetExam: ExamTarget; // 'TEF_Canada' | 'TCF_Canada' | 'Universal_B2'
-  linguisticAnchor: LinguisticAnchor; // 'telugu' | 'hindi' | 'universal_english'
+  secondaryLanguageBridge: SecondaryLanguageBridge; // 'none' | 'telugu' | 'hindi' | 'tamil' | 'spanish'
   skillFrictions: SkillType[];
 }
 

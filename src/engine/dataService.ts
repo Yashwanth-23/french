@@ -43,7 +43,7 @@ function rowToProfile(row: any): UserProfile {
       startingLevel: row.starting_level || 'A0',
       targetExamDateMonths: 16,
       targetExam: row.target_exam || 'TEF_Canada',
-      linguisticAnchor: row.linguistic_anchor || 'telugu',
+      secondaryLanguageBridge: row.secondary_language_bridge || 'none',
       skillFrictions: ['EO', 'Conjugation']
     },
     currentMilestoneId: row.current_milestone_id || 'milestone-a0',
@@ -68,7 +68,7 @@ function profileToRow(profile: UserProfile): any {
     daily_time_minutes: profile.preferences.dailyTimeMinutes,
     preferred_formats: profile.preferences.preferredFormats,
     starting_level: profile.preferences.startingLevel,
-    linguistic_anchor: profile.preferences.linguisticAnchor || 'telugu',
+    secondary_language_bridge: profile.preferences.secondaryLanguageBridge || 'none',
     current_milestone_id: profile.currentMilestoneId,
     completed_milestone_ids: profile.completedMilestoneIds,
     active_task_queue: profile.activeTaskQueue,

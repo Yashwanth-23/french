@@ -11,10 +11,9 @@ import {
   Globe, 
   X,
   Smartphone,
-  Languages,
-  RotateCcw
+  Languages
 } from 'lucide-react';
-import { UserProfile, UserPreferences, LinguisticAnchor } from '../types/preferences';
+import { UserProfile, UserPreferences, SecondaryLanguageBridge } from '../types/preferences';
 import { MediaFormat, CEFRLevel, ExamTarget } from '../types/curriculum';
 import { 
   createCloudProfile, 
@@ -44,7 +43,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
   const [newFormats, setNewFormats] = useState<MediaFormat[]>(['podcast', 'youtube']);
   const [newLevel, setNewLevel] = useState<CEFRLevel>('A0');
   const [newTargetExam, setNewTargetExam] = useState<ExamTarget>('TEF_Canada');
-  const [newAnchor, setNewAnchor] = useState<LinguisticAnchor>('telugu');
+  const [newBridge, setNewBridge] = useState<SecondaryLanguageBridge>('none');
 
   if (!isOpen) return null;
 
@@ -58,7 +57,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
       startingLevel: newLevel,
       targetExamDateMonths: 16,
       targetExam: newTargetExam,
-      linguisticAnchor: newAnchor,
+      secondaryLanguageBridge: newBridge,
       skillFrictions: ['EO', 'Conjugation']
     };
 
@@ -72,12 +71,12 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
     onClose();
   };
 
-  const handleUpdateLinguisticAnchor = async (anchor: LinguisticAnchor) => {
+  const handleUpdateSecondaryBridge = async (bridge: SecondaryLanguageBridge) => {
     const updated: UserProfile = {
       ...activeProfile,
       preferences: {
         ...activeProfile.preferences,
-        linguisticAnchor: anchor
+        secondaryLanguageBridge: bridge
       }
     };
     await saveProfileToCloud(updated);
@@ -144,7 +143,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/80">
           <div className="flex items-center space-x-2">
             <Users className="w-5 h-5 text-sky-400" />
-            <h2 className="text-base font-bold text-white">Cloud Profile & Linguistic Preferences</h2>
+            <h2 className="text-base font-bold text-white">Cloud Profile & Linguistic Settings</h2>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
             <X className="w-5 h-5" />
@@ -177,34 +176,36 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
             </button>
           </div>
 
-          {/* Linguistic Anchor Selector */}
+          {/* Example Language / Native Bridge Selector */}
           <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2">
             <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-white">
               <Languages className="w-4 h-4 text-sky-400" />
-              <span>Comparative Native Language Anchor</span>
+              <span>Example Notes & Linguistic Comparison</span>
             </div>
             <p className="text-[11px] text-slate-400">
-              Changes grammar & sound analogies in your task notes.
+              Clean English is the default base for all explanations. Select an optional native parallel:
             </p>
-            <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
               {[
-                { id: 'telugu', label: 'Telugu Native', sub: 'నువ్వు/మీరు, త/ద' },
-                { id: 'hindi', label: 'Hindi / National', sub: 'तू/आप, त/द, लिंग' },
-                { id: 'universal_english', label: 'English / Universal', sub: 'Cognates & Register' },
+                { id: 'none', label: '🌐 English Only (Universal)', sub: 'Clean English (Standard for US/Global)' },
+                { id: 'telugu', label: '🇮🇳 Telugu + English', sub: 'Adds Telugu parallels (నువ్వు/మీరు, త/ద)' },
+                { id: 'hindi', label: '🇮🇳 Hindi + English', sub: 'Adds Hindi parallels (तू/आप, लिंग)' },
+                { id: 'tamil', label: '🇮🇳 Tamil + English', sub: 'Adds Tamil parallels (நீ/நீங்கள்)' },
+                { id: 'spanish', label: '🇪🇸 Spanish + English', sub: 'Adds Spanish cognates (Tú/Usted)' },
               ].map(item => {
-                const currentAnchor = activeProfile.preferences.linguisticAnchor || 'telugu';
-                const isSelected = currentAnchor === item.id;
+                const currentBridge = activeProfile.preferences.secondaryLanguageBridge || 'none';
+                const isSelected = currentBridge === item.id;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => handleUpdateLinguisticAnchor(item.id as LinguisticAnchor)}
+                    onClick={() => handleUpdateSecondaryBridge(item.id as SecondaryLanguageBridge)}
                     className={`p-2.5 rounded-xl border text-left transition ${
                       isSelected
-                        ? 'bg-sky-500/20 text-sky-300 border-sky-500 font-bold'
+                        ? 'bg-sky-500/20 text-sky-300 border-sky-500 font-bold shadow-sm'
                         : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
                     }`}
                   >
-                    <div className="text-xs text-white">{item.label}</div>
+                    <div className="text-xs text-white font-bold">{item.label}</div>
                     <div className="text-[10px] text-slate-400 mt-0.5">{item.sub}</div>
                   </button>
                 );
@@ -226,7 +227,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                 <label className="text-xs text-slate-300 block mb-1">Friend's Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. Rahul"
+                  placeholder="e.g. Alex"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
@@ -262,15 +263,17 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-xs text-slate-300 block mb-1">Native Anchor</label>
+                  <label className="text-xs text-slate-300 block mb-1">Example Bridge</label>
                   <select
-                    value={newAnchor}
-                    onChange={(e) => setNewAnchor(e.target.value as LinguisticAnchor)}
+                    value={newBridge}
+                    onChange={(e) => setNewBridge(e.target.value as SecondaryLanguageBridge)}
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"
                   >
-                    <option value="telugu">Telugu</option>
-                    <option value="hindi">Hindi</option>
-                    <option value="universal_english">English/Universal</option>
+                    <option value="none">English Only</option>
+                    <option value="telugu">Telugu + Eng</option>
+                    <option value="hindi">Hindi + Eng</option>
+                    <option value="tamil">Tamil + Eng</option>
+                    <option value="spanish">Spanish + Eng</option>
                   </select>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 ﻿import { CEFRLevel, DailyTask, Milestone, ResourceItem, SkillType, MediaFormat, ExamTarget } from '../types/curriculum';
-import { UserPreferences, UserProfile, LinguisticAnchor } from '../types/preferences';
+import { UserPreferences, UserProfile, SecondaryLanguageBridge } from '../types/preferences';
 import resourcesData from '../data/resources.json';
 import milestonesData from '../data/milestones.json';
 
@@ -14,10 +14,12 @@ export interface DailyPlanResult {
   activeOutputPercentage: number;
 }
 
-interface MultiLingualNote {
-  telugu: string;
-  hindi: string;
-  universal_english: string;
+interface MultiLingualBridgeNote {
+  englishBase: string;
+  telugu?: string;
+  hindi?: string;
+  tamil?: string;
+  spanish?: string;
 }
 
 interface SkillSlotConfig {
@@ -28,7 +30,7 @@ interface SkillSlotConfig {
   nature: string;
   mandatory: boolean;
   instructions: string;
-  notes: MultiLingualNote;
+  bridgeNotes: MultiLingualBridgeNote;
   isShadowing?: boolean;
 }
 
@@ -47,10 +49,12 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'active_shadowing',
         mandatory: true,
         instructions: 'Practice French nasal vowels in front of a mirror. Air must escape through both mouth and nose without sounding the final N or M consonant.',
-        notes: {
-          telugu: 'Pronounce T/D as dental (తెలుగు త/ద on front teeth), not retroflex (ట/డ). Nasal vowels vibrate through the nasal cavity like తెలుగు అనునాసికాలు.',
-          hindi: 'Nasal vowels match Hindi Chandrabindu (माँ, चाँद). Consonants T/D are dental (दंत्य त/द), not retroflex (ट/ड).',
-          universal_english: 'Pronounce French T/D with tongue on front teeth (dental). Nasal vowels release air through nose and mouth simultaneously; final N/M is silent.'
+        bridgeNotes: {
+          englishBase: 'French T/D are dental (tongue pressed on upper front teeth). Nasal vowels release air through nose and mouth simultaneously without sounding final N/M.',
+          telugu: 'Matches dental Telugu త/ద (not retroflex ట/డ), and nasal resonance vibrates like తెలుగు అనునాసికాలు.',
+          hindi: 'Matches Hindi dental त/द (not ट/ड) and Chandrabindu nasalization (माँ, चाँद).',
+          tamil: 'Pronounce dental த/த without English aspiration.',
+          spanish: 'Dental /t/ and /d/ are identical to Spanish "todo".'
         },
         isShadowing: true
       },
@@ -62,10 +66,11 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'srs_retrieval',
         mandatory: true,
         instructions: 'Review 15 new flashcards with native audio playback. Pronounce each card aloud immediately after hearing it.',
-        notes: {
-          telugu: 'In Telugu, inanimate objects are neuter (అచేతనం). In French, every object is masculine (un/le) or feminine (une/la). Always memorize nouns with their article!',
-          hindi: 'Never learn a noun without its article (un/une or le/la). Inanimate objects have gender just like in Hindi (किताब f, कमरा m).',
-          universal_english: 'All French nouns have grammatical gender (masculine or feminine). Never memorize a noun in isolation — always learn it with its article (un/une, le/la).'
+        bridgeNotes: {
+          englishBase: 'Every French noun has grammatical gender (masculine or feminine). Always memorize nouns with their article (un/une, le/la), never alone.',
+          telugu: 'Inanimate objects in Telugu are neuter (అచేతనం), but in French they must be masculine (un) or feminine (une). Always attach the article.',
+          hindi: 'Inanimate objects have gender just like in Hindi (किताब f, कमरा m).',
+          spanish: 'Gender matches Romance patterns (el libro / le livre, la mesa / la table).'
         }
       },
       {
@@ -76,10 +81,12 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'drill_conjugation',
         mandatory: true,
         instructions: 'Write out and recite the full present tense conjugations of ÊTRE (to be) and AVOIR (to have).',
-        notes: {
-          telugu: 'Tu = నువ్వు (informal for close friends/family); Vous = మీరు (formal for strangers, superiors, and exam examiners).',
-          hindi: 'Tu = तू/तुम (informal for friends/family); Vous = आप (formal for strangers, superiors, and examiners).',
-          universal_english: 'Tu = informal "you" (friends/peers); Vous = formal "you" (strangers, officials, and TEF/TCF examiners). Never mix registers in formal tasks.'
+        bridgeNotes: {
+          englishBase: 'Tu = informal "you" (friends/family); Vous = formal "you" (strangers, superiors, and TEF/TCF examiners). Never mix registers in exams.',
+          telugu: 'Tu = నువ్వు (informal); Vous = మీరు (formal).',
+          hindi: 'Tu = तू/तुम (informal); Vous = आप (formal).',
+          tamil: 'Tu = நீ (informal); Vous = நீங்கள் (formal).',
+          spanish: 'Tu = Tú (informal); Vous = Usted (formal).'
         }
       }
     ]
@@ -94,10 +101,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'srs_retrieval',
         mandatory: true,
         instructions: 'Complete daily due cards on Anki. Focus on everyday household items, food, professions, and travel vocabulary.',
-        notes: {
-          telugu: '35%+ of English Latin words carry directly into French with slight pronunciation changes (-tion, -able, -té). Use your English vocabulary as a massive shortcut.',
-          hindi: 'English Latin cognates (-tion, -able) carry over directly into French with minor accent tweaks.',
-          universal_english: 'Cognate shortcut: Over 35% of English vocabulary derives from French/Latin (-tion, -able, -ty -> -té). Use this cognate bridge to rapidly expand your passive lexicon.'
+        bridgeNotes: {
+          englishBase: 'Cognate shortcut: Over 35% of English vocabulary derives from French/Latin (-tion, -able, -ty -> -té). Use your English foundation as a massive accelerator.',
+          telugu: 'Use English Latin cognates (-tion -> -tion, -ty -> -té) to rapidly build your passive reading bank without rote memorization.',
+          hindi: 'English cognates (-tion, -able) carry over directly with minor accent adjustments.'
         }
       },
       {
@@ -108,10 +115,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'drill_conjugation',
         mandatory: true,
         instructions: 'Do 10 rapid-fire drills on Le Conjugueur. Master DR & MRS VANDERTRAMP movement verbs that take Être in Passé Composé.',
-        notes: {
-          telugu: 'Passé Composé represents a completed past action (నేను తిన్నాను / I ate). Movement verbs take Être (e.g. Je suis allé = నేను వెళ్లాను).',
-          hindi: 'Passé Composé represents a completed past action (मैंने खाया / I ate). Movement verbs use Être as auxiliary.',
-          universal_english: 'Passé Composé is the standard past tense for completed punctual events (I ate / I went). Movement verbs use Être as the auxiliary.'
+        bridgeNotes: {
+          englishBase: 'Passé Composé expresses completed past actions (I ate / I went). Movement verbs use Être as the auxiliary (Je suis allé = I went).',
+          telugu: 'Passé Composé = punctual completed past (నేను తిన్నాను / నేను వెళ్లాను).',
+          hindi: 'Passé Composé = punctual completed past (मैंने खाया / मैं गया).'
         }
       },
       {
@@ -122,10 +129,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'passive_input',
         mandatory: false,
         instructions: 'Listen to slow, graded French audio without English subtitles. Focus on identifying sentence boundaries and verb endings.',
-        notes: {
-          telugu: 'French sentence structure is SVO (Subject-Verb-Object) like English. Unlike Telugu (SOV where verb goes at the end), keep the verb immediately after the subject.',
-          hindi: 'French is SVO (Subject-Verb-Object) like English. Avoid putting verbs at the end as in Hindi (SOV).',
-          universal_english: 'French follows strict SVO (Subject-Verb-Object) syntax in declarative statements. Focus your ears on verb endings to distinguish tense.'
+        bridgeNotes: {
+          englishBase: 'French follows strict SVO (Subject-Verb-Object) word order in declarative sentences, just like English.',
+          telugu: 'Unlike Telugu (SOV where the verb comes at the end), French places the verb directly after the subject (SVO).',
+          hindi: 'Unlike Hindi (SOV), French places verbs directly after subjects (SVO).'
         }
       },
       {
@@ -136,10 +143,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'drill_conjugation',
         mandatory: false,
         instructions: 'Study negation sandwich rules (ne + verb + pas / jamais / rien) and partitive articles (du, de la, des).',
-        notes: {
-          telugu: 'Negation forms a "sandwich" around the conjugated verb: "Je ne mange pas" (నేను తినట్లేదు).',
-          hindi: 'Negation hugs the conjugated verb: "Je ne mange pas" (मैं नहीं खा रहा हूँ).',
-          universal_english: 'Standard French negation wraps around the verb like a sandwich: "ne + [verb] + pas / jamais / rien".'
+        bridgeNotes: {
+          englishBase: 'French negation wraps around the conjugated verb like a sandwich: "ne + [verb] + pas / jamais / rien".',
+          telugu: 'Negation wraps around the verb: "Je ne mange pas" (నేను తినడం లేదు).',
+          hindi: 'Negation wraps around the verb: "Je ne mange pas" (मैं नहीं खा रहा हूँ).'
         }
       }
     ]
@@ -154,10 +161,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'active_shadowing',
         mandatory: true,
         instructions: '1. Listen to a 3-minute podcast snippet. 2. Read transcript aloud simultaneously matching native rhythm and liaison. 3. Record yourself on your phone.',
-        notes: {
-          telugu: 'Vocal shadowing trains your tongue to connect words smoothly (liaison) without chopping syllables into isolated Indian stress beats.',
-          hindi: 'Shadowing eliminates choppy syllable timing and builds authentic French breath-group flow.',
-          universal_english: 'Vocal shadowing builds authentic French breath-group flow and enforces natural liaison (linking final consonants to following vowels).'
+        bridgeNotes: {
+          englishBase: 'Vocal shadowing builds authentic French breath-group flow and enforces liaison (linking silent final consonants to following vowel sounds).',
+          telugu: 'Vocal shadowing trains your tongue to link words smoothly instead of pausing between individual syllables.',
+          hindi: 'Shadowing prevents syllable-chopping and develops smooth native liaison flow.'
         },
         isShadowing: true
       },
@@ -169,10 +176,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'drill_conjugation',
         mandatory: true,
         instructions: 'Drill Imparfait endings (-ais, -ait, -ions, -iez, -aient) vs Passé Composé. Practice substituting nouns with COD/COI pronouns.',
-        notes: {
-          telugu: 'Imparfait = ongoing past description or habit (చేస్తూ ఉండేవాడిని / జరుగుతూ ఉంది); Passé Composé = single finished action (చేశాను).',
-          hindi: 'Imparfait = background description (हो रहा था); Passé Composé = punctual completed event (हुआ).',
-          universal_english: 'Imparfait describes past continuous states or recurring habits (I was doing / I used to do); Passé Composé narrates specific completed events.'
+        bridgeNotes: {
+          englishBase: 'Imparfait describes continuous past states or habits (I was doing / I used to do); Passé Composé narrates punctual completed events (I did).',
+          telugu: 'Imparfait = ongoing past or habit (చేస్తూ ఉండేవాడిని); Passé Composé = finished event (చేశాను).',
+          hindi: 'Imparfait = background/habit (कर रहा था); Passé Composé = finished event (किया).'
         }
       },
       {
@@ -183,10 +190,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'srs_retrieval',
         mandatory: true,
         instructions: 'Review daily flashcards. Add 5 newly discovered idioms or expressions from today\'s podcast transcript.',
-        notes: {
-          telugu: 'Learn verb prepositions together with verbs: "penser à" (దాని గురించి ఆలోచించడం) vs "parler de" (దాని గురించి మాట్లాడటం).',
-          hindi: 'Learn verb prepositions: "penser à" (to think about) vs "parler de" (to talk about).',
-          universal_english: 'Always learn verbs with their dependent prepositions ("penser à" vs "parler de") to ensure correct pronoun replacement (y vs en).'
+        bridgeNotes: {
+          englishBase: 'Always learn verbs with their dependent prepositions ("penser à" vs "parler de") to ensure correct pronoun substitution (y vs en).',
+          telugu: 'Learn verbs with prepositions: "penser à" (ఆలోచించడం) vs "parler de" (మాట్లాడటం).',
+          hindi: 'Learn verbs with prepositions: "penser à" (सोचना) vs "parler de" (बात करना).'
         }
       },
       {
@@ -197,10 +204,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'drill_conjugation',
         mandatory: false,
         instructions: 'Complete one short dictation on Podcast Français Facile to verify silent letter spelling and past participle agreements.',
-        notes: {
-          telugu: 'French orthography has many silent letters (D,P,S,T,X,Z). Dictations ensure you connect what you hear to accurate spelling.',
-          hindi: 'Dictations bridge the gap between French phonetics and complex silent-letter orthography.',
-          universal_english: 'Dictation practice bridges the gap between spoken French phonetics and silent grammatical agreements in written French.'
+        bridgeNotes: {
+          englishBase: 'Dictation practice bridges the gap between spoken French sounds and silent grammatical agreements in written French (e.g. plural -s, feminine -e).',
+          telugu: 'Dictations teach you to handle silent French letters (D,P,S,T,X,Z) accurately in spelling.',
+          hindi: 'Dictations train you to spell silent past participle agreements correctly.'
         }
       }
     ]
@@ -215,10 +222,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'active_shadowing',
         mandatory: true,
         instructions: 'Listen to today\'s 10-minute RFI bulletin. Read transcript aloud with the audio at 1.0x speed. Extract 5 journalistic collocations.',
-        notes: {
-          telugu: 'RFI builds the rapid ear-parsing speed required to score NCLC 7 in TEF/TCF Compréhension Orale.',
-          hindi: 'Develops the rapid ear-parsing ability needed for TEF/TCF Compréhension Orale.',
-          universal_english: 'RFI training conditions your ear to parse rapid, authentic journalistic speech without pausing, essential for NCLC 7.'
+        bridgeNotes: {
+          englishBase: 'RFI training conditions your ear to parse rapid, authentic journalistic speech without pausing, essential for NCLC 7 listening speed.',
+          telugu: 'RFI develops the fast ear-parsing speed required for Canadian NCLC 7 Compréhension Orale.',
+          hindi: 'RFI conditions your ear for rapid TEF/TCF exam audio tempo.'
         },
         isShadowing: true
       },
@@ -230,10 +237,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'passive_input',
         mandatory: true,
         instructions: 'Watch one breakdown of Canadian French phonetic differences (affrication of t/d into ts/dz, nasal vowel shifts, and regional terms).',
-        notes: {
-          telugu: 'Canadian French turns T/D before I/U into "ts/dz" (e.g. "tu" sounds like "tsu"). Watch out for Canadian terms: "le char" (car), "magasiner" (shopping).',
-          hindi: 'High-frequency Canadian words: "le char" (car), "magasiner" (shopping), "la fin de semaine" (weekend).',
-          universal_english: 'Canadian French features regular affrication of /t/ and /d/ before high vowels (tu -> [tsy]) and distinct regional vocabulary.'
+        bridgeNotes: {
+          englishBase: 'Canadian French features regular affrication of /t/ and /d/ before high vowels (tu -> [tsy], dire -> [dzir]) and unique everyday terms (char = car, fin de semaine = weekend).',
+          telugu: 'Canadian French turns T/D before I/U into "ts/dz" (e.g. "tu" sounds like "tsu"). Look out for "le char" (car).',
+          hindi: 'Canadian French affricates t/d before i/u (tu -> tsu) and uses regional vocabulary.'
         }
       },
       {
@@ -244,10 +251,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'production_prompt',
         mandatory: true,
         instructions: 'Form 3 complex sentences using Subjunctive triggers ("Il faut que...", "Bien que...") and logical connectors ("En revanche", "Par conséquent").',
-        notes: {
-          telugu: 'Subjunctive conveys subjective mood (అవసరం, సందేహం, కోరిక: "ఇలా చేయాల్సి ఉంటుంది"), not objective facts.',
-          hindi: 'Subjunctive conveys subjective mood (doubt, necessity, desire: "ज़रूरी है कि..."), not objective facts.',
-          universal_english: 'The Subjunctive mood is mandatory after expressions of necessity, doubt, emotion, and certain conjunctions (bien que, pour que).'
+        bridgeNotes: {
+          englishBase: 'The Subjunctive expresses subjective mood (necessity, doubt, emotion: "Il faut que je fasse...") rather than objective facts.',
+          telugu: 'Subjunctive conveys necessity and subjective intent (అవసరం, కోరిక: "ఇలా చేయాల్సి ఉంది").',
+          hindi: 'Subjunctive expresses necessity and subjective feeling ("यह ज़रूरी है कि...").'
         }
       },
       {
@@ -258,10 +265,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'srs_retrieval',
         mandatory: false,
         instructions: 'Sustain active vocabulary retention across public policy, health, economy, and environmental domains.',
-        notes: {
-          telugu: 'Focus on nominalization: converting verbs into formal nouns (détruire -> la destruction) for high-scoring writing.',
-          hindi: 'Focus on nominalization: converting verbs to formal nouns (détruire -> la destruction).',
-          universal_english: 'Master nominalization (converting action verbs into formal nouns: réduire -> la réduction) for high B2 writing scores.'
+        bridgeNotes: {
+          englishBase: 'Master nominalization (converting action verbs into formal nouns: réduire -> la réduction) for high B2 writing scores.',
+          telugu: 'Practice nominalization: converting verbs to formal nouns (détruire -> la destruction) for writing.',
+          hindi: 'Practice nominalization: converting verbs into formal nouns for higher B2 writing scores.'
         }
       }
     ]
@@ -276,10 +283,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'timed_mock',
         mandatory: true,
         instructions: 'Complete a full timed listening or reading series under computerized exam room conditions without pause.',
-        notes: {
-          telugu: 'TEF: Audio plays strictly once (take notes fast). TCF: Mixed audio playback with 35-minute continuous pacing.',
-          hindi: 'TEF: Single-pass audio only (take fast notes). TCF: Continuous 35m pacing.',
-          universal_english: 'TEF Canada Listening is strictly single-pass. TCF Canada has mixed single/double pass with rapid continuous pacing.'
+        bridgeNotes: {
+          englishBase: 'TEF Canada Listening is strictly single-pass (audio plays once only). TCF Canada has mixed playback with continuous 35m pacing.',
+          telugu: 'TEF: Audio plays strictly once (take notes fast). TCF: Mixed audio playback with 35m pacing.',
+          hindi: 'TEF: Single-pass audio only (take fast notes). TCF: Continuous 35m pacing.'
         }
       },
       {
@@ -290,10 +297,10 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'production_prompt',
         mandatory: true,
         instructions: 'Section A: Ask 10 rapid formal questions (Vous). Section B: Deliver a 5-minute persuasive speech to a friend (Tu) overcoming 3 objections.',
-        notes: {
-          telugu: 'Section A = formal VOUS (మీరు); Section B = informal TU (నువ్వు). Never mix registers in the exam!',
-          hindi: 'Section A = formal VOUS (आप); Section B = informal TU (तू/तुम). Never mix registers.',
-          universal_english: 'Section A requires strictly formal VOUS (formal inquiry); Section B requires informal TU (persuading a friend). Do not cross registers.'
+        bridgeNotes: {
+          englishBase: 'Section A requires strictly formal VOUS (formal inquiry with examiner); Section B requires informal TU (persuading a friend). Never mix registers in exams.',
+          telugu: 'Section A = formal VOUS (మీరు); Section B = informal TU (నువ్వు). Never mix registers.',
+          hindi: 'Section A = formal VOUS (आप); Section B = informal TU (तू/तुम). Never mix registers.'
         }
       },
       {
@@ -304,15 +311,33 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
         nature: 'production_prompt',
         mandatory: true,
         instructions: 'Draft a formal argumentative letter to the editor. Incorporate at least 4 logical connectors and 1 subjunctive structure.',
-        notes: {
-          telugu: 'Maintain formal register from salutation to sign-off ("Je vous prie d\'agréer, Madame/Monsieur, l\'expression de mes salutations distinguées").',
-          hindi: 'Maintain formal register from salutation to sign-off ("Je vous prie d\'agréer...").',
-          universal_english: 'Maintain strict formal register from opening to closing formula ("Je vous prie d\'agréer..."). Structure with clear logical connectors.'
+        bridgeNotes: {
+          englishBase: 'Maintain strict formal register from opening to closing formula ("Je vous prie d\'agréer..."). Structure arguments with clear logical connectors.',
+          telugu: 'Maintain formal register from salutation to sign-off ("Je vous prie d\'agréer...").',
+          hindi: 'Maintain formal register from salutation to sign-off.'
         }
       }
     ]
   }
 };
+
+function formatBridgeNote(
+  bridgeNotes: MultiLingualBridgeNote,
+  secondaryBridge?: SecondaryLanguageBridge
+): string {
+  const base = bridgeNotes.englishBase;
+  if (!secondaryBridge || secondaryBridge === 'none') {
+    return base;
+  }
+
+  const nativeText = bridgeNotes[secondaryBridge];
+  if (nativeText) {
+    const label = secondaryBridge.charAt(0).toUpperCase() + secondaryBridge.slice(1);
+    return `${base} • 💡 ${label} Anchor: ${nativeText}`;
+  }
+
+  return base;
+}
 
 export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
   const { preferences, currentMilestoneId } = profile;
@@ -321,7 +346,7 @@ export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
   const availableMinutes = preferences.dailyTimeMinutes;
   const preferredFormats = preferences.preferredFormats || ['podcast', 'youtube'];
   const targetExam = preferences.targetExam || 'Universal_B2';
-  const anchor: LinguisticAnchor = preferences.linguisticAnchor || 'telugu';
+  const secondaryBridge: SecondaryLanguageBridge = preferences.secondaryLanguageBridge || 'none';
 
   const rule = ALLOCATION_RULES[level] || ALLOCATION_RULES.A0;
   const tasks: DailyTask[] = [];
@@ -372,7 +397,7 @@ export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
       }
     }
 
-    const note = slot.notes[anchor] || slot.notes.telugu || slot.notes.universal_english;
+    const note = formatBridgeNote(slot.bridgeNotes, secondaryBridge);
 
     tasks.push({
       id: `task-${level.toLowerCase()}-${slot.skill.toLowerCase()}-${idx + 1}`,
