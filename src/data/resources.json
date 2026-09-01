@@ -3,7 +3,7 @@
     "id": "tv5-tcf-simulator",
     "title": "TV5Monde TCF Canada Digital Exam Simulator",
     "creatorOrSource": "TV5Monde & France Éducation international",
-    "url": "https://apprendre.tv5monde.com/fr/exercices/b1-intermediaire",
+    "url": "https://apprendre.tv5monde.com/fr",
     "badge": "Deep Free Question Bank",
     "cefrLevels": [
       "A2",
@@ -155,7 +155,7 @@
     "id": "innerfrench-podcast",
     "title": "InnerFrench Podcast & Transcripts (Hugo Cotton)",
     "creatorOrSource": "Hugo Cotton (InnerFrench)",
-    "url": "https://innerfrench.com/podcast/",
+    "url": "https://innerfrench.com/",
     "badge": "Intermediate Gold Standard",
     "cefrLevels": [
       "A2",
@@ -184,7 +184,7 @@
     "id": "le-conjugueur",
     "title": "Le Conjugueur (Le Figaro) & Bescherelle Drills",
     "creatorOrSource": "Le Figaro / Hatier",
-    "url": "https://leconjugueur.lefigaro.fr/",
+    "url": "https://leconjugueur.lefigaro.fr/frlesverbes.php",
     "badge": "Mandatory Daily Drills",
     "cefrLevels": [
       "A0",
@@ -216,7 +216,7 @@
     "id": "lawless-french",
     "title": "Lawless French (Comprehensive CEFR Grammar Bank)",
     "creatorOrSource": "Laura K. Lawless",
-    "url": "https://www.lawlessfrench.com/grammar/",
+    "url": "https://www.lawlessfrench.com/",
     "badge": "Best Free Grammar Index",
     "cefrLevels": [
       "A0",
@@ -247,7 +247,7 @@
     "id": "anki-5000-deck",
     "title": "Anki French Top 5000 Frequency Vocabulary Deck (with Audio)",
     "creatorOrSource": "AnkiWeb Open Community",
-    "url": "https://ankiweb.net/shared/decks?search=french+5000",
+    "url": "https://ankiweb.net/shared/info/893324022",
     "badge": "Spaced Repetition Engine",
     "cefrLevels": [
       "A0",
@@ -279,7 +279,7 @@
     "id": "french-sounds-phonetics",
     "title": "French Sounds & Pronunciation Masterclass",
     "creatorOrSource": "French Sounds / Learn French with Alexa",
-    "url": "https://www.youtube.com/playlist?list=PL0F9DFFDFB70B9EE9",
+    "url": "https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un",
     "badge": "Phonetic Foundation (Phase 0)",
     "cefrLevels": [
       "A0",
@@ -306,7 +306,7 @@
     "id": "quebecois-wandering-french",
     "title": "Wandering French & Ma Prof de Français (Québécois Accent & Vocab)",
     "creatorOrSource": "Hélène (Wandering French) & Geneviève (Ma prof de français)",
-    "url": "https://www.youtube.com/watch?v=F3P0DkF3m3k",
+    "url": "https://www.youtube.com/results?search_query=Wandering+French+Quebecois+pronunciation+rules",
     "badge": "100% Free Canadian Accent Training",
     "cefrLevels": [
       "B1",
@@ -335,7 +335,7 @@
     "id": "radio-canada-ohdio",
     "title": "Radio-Canada OHdio (Canadian Public Broadcaster Audio)",
     "creatorOrSource": "CBC / Radio-Canada",
-    "url": "https://ici.radio-canada.ca/ohdio/balados/6859/aujourd-hui-l-histoire",
+    "url": "https://ici.radio-canada.ca/ohdio",
     "badge": "Authentic Canadian Radio (Free)",
     "cefrLevels": [
       "B1",
@@ -363,7 +363,7 @@
     "id": "french-school-tv",
     "title": "French School TV (Vincent) - TEF/TCF Speaking & Writing Templates",
     "creatorOrSource": "Vincent (French School TV)",
-    "url": "https://www.youtube.com/playlist?list=PLwX8xXkZf9-g8wZ1rQ0x1_zC6e8X9w0y1",
+    "url": "https://www.youtube.com/results?search_query=French+School+TV+TEF+Expression+Orale+Section+A",
     "badge": "Exam Strategy Templates",
     "cefrLevels": [
       "B1",
@@ -392,7 +392,7 @@
     "id": "coffee-break-french",
     "title": "Coffee Break French (Season 1 & 2)",
     "creatorOrSource": "Radio Lingua Network",
-    "url": "https://coffeebreaklanguages.com/category/coffee-break-french/season-1/",
+    "url": "https://coffeebreaklanguages.com/coffeebreakfrench/",
     "badge": "Best Audio for Beginners",
     "cefrLevels": [
       "A1",
@@ -478,7 +478,7 @@
     "id": "podcast-francais-facile",
     "title": "Podcast Français Facile (Dialogues & Dictations)",
     "creatorOrSource": "Vincent Durrenberger",
-    "url": "https://www.podcastfrancaisfacile.com/",
+    "url": "https://www.podcastfrancaisfacile.com/grammaire",
     "badge": "Dictées & Graded Audio",
     "cefrLevels": [
       "A1",
@@ -535,7 +535,7 @@
     "id": "easy-french-yt",
     "title": "Easy French (Authentic Street Interviews)",
     "creatorOrSource": "Easy Languages",
-    "url": "https://www.youtube.com/playlist?list=PL3936178A38BB5F87",
+    "url": "https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself",
     "badge": "Dual Subtitle Immersion",
     "cefrLevels": [
       "A2",

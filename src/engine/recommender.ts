@@ -46,7 +46,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Phonetics',
         actionTitle: 'Mouth Anatomy & Nasal Vowel Drills (an/en, on, in, un)',
-        directLessonUrl: 'https://www.youtube.com/watch?v=sU1H4hT_hH8',
+        directLessonUrl: 'https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un',
         directLessonTitle: 'French Sounds: 4 Nasal Vowels (AN, IN, ON, UN) Cross-Section Masterclass',
         minMinutes: 15,
         weight: 0.40,
@@ -82,7 +82,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Conjugation',
         actionTitle: 'Subject Pronouns & Present Tense of ÊTRE and AVOIR',
-        directLessonUrl: 'https://leconjugueur.lefigaro.fr/conjugaison/du/verbe/etre.html',
+        directLessonUrl: 'https://leconjugueur.lefigaro.fr/conjugaison/verbe/etre.html',
         directLessonTitle: 'Le Conjugueur: ÊTRE & AVOIR Full Present Tense Paradigm',
         minMinutes: 10,
         weight: 0.30,
@@ -120,7 +120,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Conjugation',
         actionTitle: 'Mandatory Conjugation Floor: Regular -ER Verbs & Passé Composé',
-        directLessonUrl: 'https://www.lawlessfrench.com/grammar/passe-compose/',
+        directLessonUrl: 'https://leconjugueur.lefigaro.fr/frlesverbes.php',
         directLessonTitle: 'Lawless French: Passé Composé with Avoir & Être (Interactive Guide)',
         minMinutes: 15,
         weight: 0.30,
@@ -136,7 +136,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CO',
         actionTitle: 'Comprehensible Input: Active Auditory Parsing',
-        directLessonUrl: 'https://www.youtube.com/watch?v=1b-3i_bH1s0',
+        directLessonUrl: 'https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself',
         directLessonTitle: 'Super Easy French 1: Se Présenter / Introducing Yourself (Slow French + Subtitles)',
         minMinutes: 15,
         weight: 0.30,
@@ -152,7 +152,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Grammar',
         actionTitle: 'Grammar Focus: Negation Structures & Article Rules',
-        directLessonUrl: 'https://www.lawlessfrench.com/grammar/negative-adverbs/',
+        directLessonUrl: 'https://www.podcastfrancaisfacile.com/grammaire',
         directLessonTitle: 'Lawless French: Negative Adverbs (ne... pas, ne... jamais, ne... rien)',
         minMinutes: 10,
         weight: 0.20,
@@ -172,7 +172,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EO',
         actionTitle: 'Active Vocal Shadowing: InnerFrench + Synchronized Transcript',
-        directLessonUrl: 'https://innerfrench.com/podcast/ep-01-apprendre-le-francais/',
+        directLessonUrl: 'https://innerfrench.com/',
         directLessonTitle: 'InnerFrench Episode 01: "Apprendre le français" (Player & Free PDF Transcript)',
         minMinutes: 25,
         weight: 0.40,
@@ -189,7 +189,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Conjugation',
         actionTitle: 'Grammar & Verb Tense: Imparfait vs Passé Composé',
-        directLessonUrl: 'https://www.lawlessfrench.com/grammar/passe-compose-vs-imparfait/',
+        directLessonUrl: 'https://leconjugueur.lefigaro.fr/frlesverbes.php',
         directLessonTitle: 'Lawless French: Passé Composé vs Imparfait Comparison & Quiz',
         minMinutes: 15,
         weight: 0.25,
@@ -221,7 +221,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CE',
         actionTitle: 'Dictation (Dictée) & Reading Comprehension',
-        directLessonUrl: 'https://www.podcastfrancaisfacile.com/dictee/dictee-a2-debutant.html',
+        directLessonUrl: 'https://www.podcastfrancaisfacile.com/grammaire',
         directLessonTitle: 'Podcast Français Facile: Graded A2 Audio Dictation & Answer Checker',
         minMinutes: 10,
         weight: 0.20,
@@ -258,7 +258,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CO',
         actionTitle: 'Québécois Dialect & Accent Ear Calibration',
-        directLessonUrl: 'https://www.youtube.com/watch?v=l_a6a0Hj7Xg',
+        directLessonUrl: 'https://www.youtube.com/results?search_query=Wandering+French+Quebecois+pronunciation+rules',
         directLessonTitle: 'Wandering French: 10 Phonetic Keys to Understand Canadian French & Affrication',
         minMinutes: 15,
         weight: 0.25,
@@ -274,7 +274,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EO',
         actionTitle: 'Subjunctive & Argumentative Discourse Connectors',
-        directLessonUrl: 'https://www.lawlessfrench.com/grammar/subjunctive/',
+        directLessonUrl: 'https://www.podcastfrancaisfacile.com/grammaire',
         directLessonTitle: 'Lawless French: The Subjunctive Mood (Triggers, Conjugations & Quiz)',
         minMinutes: 15,
         weight: 0.25,
@@ -310,7 +310,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Exam_Mock',
         actionTitle: 'Timed Exam Simulation (Compréhension Orale & Écrite)',
-        directLessonUrl: 'https://apprendre.tv5monde.com/fr/exercices/b1-intermediaire',
+        directLessonUrl: 'https://www.france-education-international.fr/hub/tcf',
         directLessonTitle: 'TV5Monde: 40-Question Timed B1/B2 Listening & Reading Mock Exam',
         minMinutes: 35,
         weight: 0.45,
@@ -326,7 +326,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EO',
         actionTitle: 'Expression Orale Simulation: Section A & B Roleplays',
-        directLessonUrl: 'https://www.youtube.com/watch?v=kY6Ew0Y6G3M',
+        directLessonUrl: 'https://www.youtube.com/results?search_query=French+School+TV+TEF+Expression+Orale+Section+A',
         directLessonTitle: 'French School TV: TEF/TCF Canada Speaking Section A & B Formula Masterclass',
         minMinutes: 25,
         weight: 0.30,
@@ -342,7 +342,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EE',
         actionTitle: 'Expression Écrite Simulation: 200-Word Formal Letter',
-        directLessonUrl: 'https://www.lawlessfrench.com/vocabulary/formal-letter-writing/',
+        directLessonUrl: 'https://www.podcastfrancaisfacile.com/grammaire',
         directLessonTitle: 'Lawless French: Formal Letter Writing Formulas & Sign-offs',
         minMinutes: 15,
         weight: 0.25,
