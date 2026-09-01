@@ -1,18 +1,11 @@
 ﻿import React from 'react';
 import { 
-  Calendar, 
   CheckCircle2, 
   Circle, 
-  ArrowRight, 
-  Clock, 
-  Sparkles, 
-  Flame, 
-  BookOpen, 
-  ExternalLink,
-  Layers
+  Clock
 } from 'lucide-react';
 import milestonesData from '../data/milestones.json';
-import { Milestone, CEFRLevel } from '../types/curriculum';
+import { Milestone } from '../types/curriculum';
 import { UserProfile } from '../types/preferences';
 import { saveProfileToCloud } from '../engine/dataService';
 
@@ -24,8 +17,7 @@ interface RoadmapViewProps {
 
 export const RoadmapView: React.FC<RoadmapViewProps> = ({
   activeProfile,
-  onProfileUpdate,
-  onOpenResource
+  onProfileUpdate
 }) => {
   const milestones = milestonesData as Milestone[];
   const currentMilestoneId = activeProfile?.currentMilestoneId || 'milestone-a0';
@@ -146,7 +138,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
                       <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80">
                         <div className="text-[11px] font-bold text-sky-400 mb-1">Grammar Pillars</div>
                         <ul className="text-xs text-slate-300 space-y-1">
-                          {m.grammarCheckpoints.map((g, i) => (
+                          {m.grammarKeypoints.map((g: string, i: number) => (
                             <li key={i} className="flex items-center space-x-1.5">
                               <span className="text-sky-500 font-bold">•</span>
                               <span>{g}</span>
@@ -158,7 +150,7 @@ export const RoadmapView: React.FC<RoadmapViewProps> = ({
                       <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80">
                         <div className="text-[11px] font-bold text-emerald-400 mb-1">Active Output Goal</div>
                         <p className="text-xs text-slate-300">
-                          {m.speakingBenchmark}
+                          {m.activeOutputMilestone}
                         </p>
                       </div>
                     </div>

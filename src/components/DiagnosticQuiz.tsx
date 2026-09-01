@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, AlertCircle, ArrowRight, X, RotateCcw } from 'lucide-react';
+import { Sparkles, CheckCircle2, ArrowRight, X } from 'lucide-react';
 import diagnosticQuestions from '../data/diagnostic.json';
 import { CEFRLevel } from '../types/curriculum';
 
@@ -41,8 +41,8 @@ export const DiagnosticQuiz: React.FC<DiagnosticQuizProps> = ({
   const calculateScoreAndLevel = (): { score: number; level: CEFRLevel } => {
     let totalScore = 0;
     questions.forEach((q, idx) => {
-      if (selectedAnswers[idx] === q.correctAnswerIndex) {
-        totalScore += q.points;
+      if (selectedAnswers[idx] === q.correctIndex) {
+        totalScore += 10;
       }
     });
 
@@ -84,7 +84,7 @@ export const DiagnosticQuiz: React.FC<DiagnosticQuizProps> = ({
             <div className="space-y-4">
               <div className="flex justify-between text-xs text-slate-400 font-mono">
                 <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
-                <span className="text-amber-400">Target Level: {currentQ.levelTested}</span>
+                <span className="text-amber-400">Target Level: {currentQ.level}</span>
               </div>
 
               <h4 className="text-sm font-bold text-white leading-snug">
