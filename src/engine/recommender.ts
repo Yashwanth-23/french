@@ -1,4 +1,4 @@
-import { CEFRLevel, DailyTask, Milestone, ResourceItem, SkillType, MediaFormat } from '../types/curriculum';
+﻿import { CEFRLevel, DailyTask, Milestone, ResourceItem, SkillType, MediaFormat, ExamTarget } from '../types/curriculum';
 import { UserPreferences, UserProfile } from '../types/preferences';
 import resourcesData from '../data/resources.json';
 import milestonesData from '../data/milestones.json';
@@ -14,348 +14,162 @@ export interface DailyPlanResult {
   activeOutputPercentage: number;
 }
 
-export function generateDailyPlan(
-  profile: UserProfile
-): DailyPlanResult {
+// Data-driven pedagogical allocation weights per CEFR level
+interface PhaseAllocationRule {
+  skillWeights: { skill: SkillType; minMinutes: number; weight: number; nature: string; mandatory: boolean }[];
+  instructionTemplates: Record<string, string>;
+}
+
+const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
+  A0: {
+    skillWeights: [
+      { skill: 'Phonetics', minMinutes: 15, weight: 0.45, nature: 'active_shadowing', mandatory: true },
+      { skill: 'Vocab', minMinutes: 10, weight: 0.25, nature: 'srs_retrieval', mandatory: true },
+      { skill: 'Conjugation', minMinutes: 10, weight: 0.30, nature: 'drill_conjugation', mandatory: true },
+    ],
+    instructionTemplates: {
+      Phonetics: 'Mouth anatomy & French nasal vowels (an/en, in, on, un). Pronounce without touching the tongue to the palate, similar to Hindi Chandrabindu.',
+      Vocab: 'Review new Anki cards with native audio. Lock in noun gender with articles (un/une, le/la).',
+      Conjugation: 'Drill present tense of ÊTRE & AVOIR. Remember Tu = तू/तुम (informal) and Vous = आप (formal).'
+    }
+  },
+  A1: {
+    skillWeights: [
+      { skill: 'Vocab', minMinutes: 10, weight: 0.20, nature: 'srs_retrieval', mandatory: true },
+      { skill: 'Conjugation', minMinutes: 15, weight: 0.30, nature: 'drill_conjugation', mandatory: true },
+      { skill: 'CO', minMinutes: 15, weight: 0.30, nature: 'passive_input', mandatory: false },
+      { skill: 'Grammar', minMinutes: 10, weight: 0.20, nature: 'drill_conjugation', mandatory: false },
+    ],
+    instructionTemplates: {
+      Vocab: 'Anki active recall session. Target 15 new words + all pending reviews.',
+      Conjugation: 'Mandatory conjugation floor: Regular -ER verbs and Passé Composé with Être (DR & MRS VANDERTRAMP).',
+      CO: 'Comprehensible Input: Listen actively for sentence structures and verb endings without English subtitles.',
+      Grammar: 'Study negative structures (ne... pas, ne... jamais) and definite vs partitive articles.'
+    }
+  },
+  A2: {
+    skillWeights: [
+      { skill: 'EO', minMinutes: 25, weight: 0.40, nature: 'active_shadowing', mandatory: true },
+      { skill: 'Conjugation', minMinutes: 15, weight: 0.25, nature: 'drill_conjugation', mandatory: true },
+      { skill: 'Vocab', minMinutes: 10, weight: 0.15, nature: 'srs_retrieval', mandatory: true },
+      { skill: 'CE', minMinutes: 10, weight: 0.20, nature: 'drill_conjugation', mandatory: false },
+    ],
+    instructionTemplates: {
+      EO: 'Vocal Shadowing with Audio + Transcript: Listen, pause, and record yourself reading aloud simultaneously to master liaison and breath groups.',
+      Conjugation: 'Past tense differentiation: Imparfait (habitual/background) vs Passé Composé (punctual action). Replace nouns with COD/COI pronouns.',
+      Vocab: 'Anki SRS lexical expansion: Add words extracted from today\'s podcast transcript.',
+      CE: 'Dictation (dictée) & reading comprehension: Verify agreement of past participles and silent letter spelling.'
+    }
+  },
+  B1: {
+    skillWeights: [
+      { skill: 'CO', minMinutes: 25, weight: 0.35, nature: 'active_shadowing', mandatory: true },
+      { skill: 'CO', minMinutes: 15, weight: 0.25, nature: 'passive_input', mandatory: true }, // Canadian accent slot
+      { skill: 'EO', minMinutes: 15, weight: 0.25, nature: 'production_prompt', mandatory: true },
+      { skill: 'Vocab', minMinutes: 10, weight: 0.15, nature: 'srs_retrieval', mandatory: false },
+    ],
+    instructionTemplates: {
+      CO: 'Real-time News Shadowing (RFI): Listen to the 10-minute international bulletin at native speed while reading the transcript.',
+      EO: 'Subjunctive & Argumentation drills: Form 3 complex sentences expressing opinion and necessity with connectors (En revanche, Néanmoins).',
+      Vocab: 'Sustain 4,000+ active lexicon using Anki retrieval.'
+    }
+  },
+  B2: {
+    skillWeights: [
+      { skill: 'Exam_Mock', minMinutes: 35, weight: 0.45, nature: 'timed_mock', mandatory: true },
+      { skill: 'EO', minMinutes: 25, weight: 0.30, nature: 'production_prompt', mandatory: true },
+      { skill: 'EE', minMinutes: 15, weight: 0.25, nature: 'production_prompt', mandatory: true },
+    ],
+    instructionTemplates: {
+      Exam_Mock: 'Timed Mock Simulation: Complete one listening or reading series under computerized exam room conditions without pausing.',
+      EO: 'Expression Orale Simulation: Section A (Inquiry / 5 mins / Vous) & Section B (Persuasion / 10 mins / Tu).',
+      EE: 'Expression Écrite Simulation: Draft a 200-word formal argumentative letter incorporating at least 4 logical connectors.'
+    }
+  }
+};
+
+export function generateDailyPlan(profile: UserProfile): DailyPlanResult {
   const { preferences, currentMilestoneId } = profile;
   const currentMilestone = milestones.find(m => m.id === currentMilestoneId) || milestones[0];
   const level = currentMilestone.level;
   const availableMinutes = preferences.dailyTimeMinutes;
-  const preferredFormats = preferences.preferredFormats;
+  const preferredFormats = preferences.preferredFormats || ['podcast', 'youtube'];
+  const targetExam = preferences.targetExam || 'Universal_B2';
 
+  const rule = ALLOCATION_RULES[level] || ALLOCATION_RULES.A0;
   const tasks: DailyTask[] = [];
 
-  // Helper to find best resource matching level and preferred format
-  const findResource = (skill: SkillType, preferredFormatList: MediaFormat[] = preferredFormats): ResourceItem | undefined => {
-    // 1. Exact match on skill + level + format
-    let match = resources.find(
-      r => r.cefrLevels.includes(level) &&
-           (r.primarySkill === skill || (r.secondarySkills && r.secondarySkills.includes(skill))) &&
-           preferredFormatList.includes(r.format)
-    );
-    // 2. Fallback to any format for that skill & level
-    if (!match) {
-      match = resources.find(
-        r => r.cefrLevels.includes(level) &&
-             (r.primarySkill === skill || (r.secondarySkills && r.secondarySkills.includes(skill)))
-      );
-    }
-    return match;
+  // Helper: Find best matching resource using weighted scoring
+  const findBestResource = (
+    skill: SkillType,
+    mustBeDialect?: 'Quebecois',
+    preferredFormatList: MediaFormat[] = preferredFormats
+  ): ResourceItem => {
+    // Score all available resources
+    const scored = resources.map(r => {
+      let score = 0;
+      // CEFR Match
+      if (r.cefrLevels.includes(level)) score += 50;
+      // Skill Match
+      if (r.primarySkill === skill) score += 40;
+      else if (r.secondarySkills && r.secondarySkills.includes(skill)) score += 20;
+      // Format Preference Match
+      if (preferredFormatList.includes(r.format)) score += 25;
+      // Dialect Match
+      if (mustBeDialect && r.dialect === mustBeDialect) score += 60;
+      // Mandatory Core Boost
+      if (r.isMandatoryCore) score += 10;
+      return { resource: r, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0]?.resource || resources[0];
   };
 
-  // Rule 1: A0 (Phonetics & Orthography)
-  if (level === 'A0') {
-    const phoneticsRes = resources.find(r => r.id === 'french-sounds-phonetics') || resources[0];
-    const srsRes = resources.find(r => r.id === 'anki-5000-deck') || resources[0];
-    const conjRes = resources.find(r => r.id === 'le-conjugueur') || resources[0];
+  // Generate slots from phase rules
+  rule.skillWeights.forEach((slot, idx) => {
+    let allocatedMinutes = Math.max(slot.minMinutes, Math.round(availableMinutes * slot.weight));
 
-    const phoneticsTime = Math.max(15, Math.round(availableMinutes * 0.5));
-    const srsTime = Math.max(10, Math.round(availableMinutes * 0.25));
-    const conjTime = Math.max(10, availableMinutes - phoneticsTime - srsTime);
+    // Special dialect handling for B1/B2 Canadian accent exposure
+    const isCanadianSlot = level === 'B1' && idx === 1;
+    const res = isCanadianSlot 
+      ? findBestResource('CO', 'Quebecois', preferredFormats)
+      : findBestResource(slot.skill, undefined, preferredFormats);
 
-    tasks.push({
-      id: `task-phonetics-${Date.now()}-1`,
-      title: 'French Sounds & Mouth Anatomy (Phonetics Drills)',
-      resourceId: phoneticsRes.id,
-      resourceTitle: phoneticsRes.title,
-      resourceUrl: phoneticsRes.url,
-      durationMinutes: phoneticsTime,
-      skill: 'Phonetics',
-      nature: 'active_shadowing',
-      instructions: 'Practice French nasal vowels (an/en, in/ain, on, un) without touching your tongue to the roof of your mouth. Notice similarity to Hindi Chandrabindu.',
-      completed: false,
-      notesForIndianLearner: 'Dental T/D (teeth contact) vs retroflex Indian sounds. Practice the French R in the back of the throat.'
-    });
+    let instruction = rule.instructionTemplates[slot.skill] || res.description;
 
-    tasks.push({
-      id: `task-srs-${Date.now()}-2`,
-      title: 'Anki 5000 Deck: Foundation Sounds & Numbers',
-      resourceId: srsRes.id,
-      resourceTitle: srsRes.title,
-      resourceUrl: srsRes.url,
-      durationMinutes: srsTime,
-      skill: 'Vocab',
-      nature: 'srs_retrieval',
-      instructions: 'Review 15 new flashcards. Always say the French word out loud along with the audio playback.',
-      completed: false,
-      notesForIndianLearner: 'Never learn a noun without its article (un/une or le/la).'
-    });
-
-    if (conjTime > 0) {
-      tasks.push({
-        id: `task-conj-${Date.now()}-3`,
-        title: 'Subject Pronouns & Present of ÊTRE and AVOIR',
-        resourceId: conjRes.id,
-        resourceTitle: conjRes.title,
-        resourceUrl: conjRes.url,
-        durationMinutes: conjTime,
-        skill: 'Conjugation',
-        nature: 'drill_conjugation',
-        instructions: 'Recite and write out the full present conjugations of ÊTRE (to be) and AVOIR (to have).',
-        completed: false,
-        notesForIndianLearner: 'Tu = तू/तुम (informal), Vous = आप (formal/plural).'
-      });
+    // Adapt instruction for exam target
+    if (slot.skill === 'Exam_Mock') {
+      if (targetExam === 'TEF_Canada') {
+        instruction += ' (TEF Canada Protocol: Single-pass audio only; no second chance playback).';
+      } else if (targetExam === 'TCF_Canada') {
+        instruction += ' (TCF Canada Protocol: Mixed audio playback; manage 35-minute continuous pacing).';
+      }
     }
-  }
 
-  // Rule 2: A1 (Foundations & Regular Verbs)
-  else if (level === 'A1') {
-    const srsTime = Math.max(10, Math.min(20, Math.round(availableMinutes * 0.2)));
-    const conjTime = Math.max(15, Math.round(availableMinutes * 0.3)); // Mandatory conjugation floor
-    const audioTime = Math.max(15, Math.round(availableMinutes * 0.3));
-    const grammarTime = Math.max(10, availableMinutes - srsTime - conjTime - audioTime);
-
-    const srsRes = resources.find(r => r.id === 'anki-5000-deck') || resources[0];
-    const conjRes = resources.find(r => r.id === 'le-conjugueur') || resources[0];
-    const audioRes = findResource('CO', preferredFormats) || resources.find(r => r.id === 'coffee-break-french') || resources[0];
-    const gramRes = resources.find(r => r.id === 'lawless-french') || resources[0];
+    const isShadowing = slot.nature === 'active_shadowing' || slot.skill === 'EO' && (level === 'A2' || level === 'B1');
 
     tasks.push({
-      id: `task-srs-${Date.now()}-1`,
-      title: 'Anki SRS Vocabulary Spaced Retrieval',
-      resourceId: srsRes.id,
-      resourceTitle: srsRes.title,
-      resourceUrl: srsRes.url,
-      durationMinutes: srsTime,
-      skill: 'Vocab',
-      nature: 'srs_retrieval',
-      instructions: 'Complete daily due flashcards (target ~15 new + review cards).',
-      completed: false
-    });
-
-    tasks.push({
-      id: `task-conj-${Date.now()}-2`,
-      title: 'Mandatory Conjugation Drills: -ER Verbs & Passé Composé',
-      resourceId: conjRes.id,
-      resourceTitle: conjRes.title,
-      resourceUrl: conjRes.url,
-      durationMinutes: conjTime,
-      skill: 'Conjugation',
-      nature: 'drill_conjugation',
-      instructions: 'Do 10 rapid conjugation exercises on Le Conjugueur. Focus on DR & MRS VANDERTRAMP verbs taking ÊTRE.',
+      id: `task-${level.toLowerCase()}-${slot.skill.toLowerCase()}-${idx + 1}`,
+      title: `${res.title.split('(')[0].trim()}`,
+      resourceId: res.id,
+      resourceTitle: res.title,
+      resourceUrl: res.url,
+      durationMinutes: allocatedMinutes,
+      skill: slot.skill,
+      nature: slot.nature as any,
+      instructions: instruction,
       completed: false,
-      notesForIndianLearner: 'Passé Composé represents a completed action (मैंने खाया).'
+      notesForIndianLearner: res.notesForIndianLearners,
+      isShadowing
     });
+  });
 
-    tasks.push({
-      id: `task-audio-${Date.now()}-3`,
-      title: `Comprehensible Input: ${audioRes.title.split('(')[0]}`,
-      resourceId: audioRes.id,
-      resourceTitle: audioRes.title,
-      resourceUrl: audioRes.url,
-      durationMinutes: audioTime,
-      skill: 'CO',
-      nature: 'passive_input',
-      instructions: 'Listen actively without English subtitles. Focus on identifying sentence boundaries and verb tenses.',
-      completed: false
-    });
-
-    if (grammarTime > 0) {
-      tasks.push({
-        id: `task-gram-${Date.now()}-4`,
-        title: 'Grammar Focus: Negation & Direct Objects',
-        resourceId: gramRes.id,
-        resourceTitle: gramRes.title,
-        resourceUrl: gramRes.url,
-        durationMinutes: grammarTime,
-        skill: 'Grammar',
-        nature: 'drill_conjugation',
-        instructions: 'Study negation rules (ne... pas, ne... jamais) and definite vs partitive articles (du, de la, des).',
-        completed: false
-      });
-    }
-  }
-
-  // Rule 3: A2 (Conversational Expansion & Vocal Shadowing)
-  else if (level === 'A2') {
-    const srsTime = Math.min(15, Math.round(availableMinutes * 0.15));
-    const shadowTime = Math.max(25, Math.round(availableMinutes * 0.4)); // Mandatory shadowing
-    const conjGrammarTime = Math.max(15, Math.round(availableMinutes * 0.25));
-    const readingTime = Math.max(10, availableMinutes - srsTime - shadowTime - conjGrammarTime);
-
-    const innerFrenchRes = resources.find(r => r.id === 'innerfrench-podcast') || resources[0];
-    const conjRes = resources.find(r => r.id === 'le-conjugueur') || resources[0];
-    const srsRes = resources.find(r => r.id === 'anki-5000-deck') || resources[0];
-    const pffRes = resources.find(r => r.id === 'podcast-francais-facile') || resources[0];
-
-    tasks.push({
-      id: `task-shadow-${Date.now()}-1`,
-      title: 'Active Vocal Shadowing: InnerFrench + Transcript',
-      resourceId: innerFrenchRes.id,
-      resourceTitle: innerFrenchRes.title,
-      resourceUrl: innerFrenchRes.url,
-      durationMinutes: shadowTime,
-      skill: 'EO',
-      nature: 'active_shadowing',
-      isShadowing: true,
-      instructions: '1. Listen to 5 minutes of Hugo Cotton. 2. Read transcript aloud simultaneously matching his rhythm and liaison. 3. Record yourself on your phone.',
-      completed: false,
-      notesForIndianLearner: 'Vocal shadowing prevents Indian rhythm interference and builds authentic French breath-group pacing.'
-    });
-
-    tasks.push({
-      id: `task-conj-${Date.now()}-2`,
-      title: 'Grammar & Verb Tense: Imparfait vs Passé Composé',
-      resourceId: conjRes.id,
-      resourceTitle: conjRes.title,
-      resourceUrl: conjRes.url,
-      durationMinutes: conjGrammarTime,
-      skill: 'Conjugation',
-      nature: 'drill_conjugation',
-      instructions: 'Drill Imparfait endings (-ais, -ais, -ait, -ions, -iez, -aient) vs Passé Composé. Practice COD/COI pronoun replacement.',
-      completed: false,
-      notesForIndianLearner: 'Imparfait = background description (हो रहा था); Passé Composé = sudden event (हुआ).'
-    });
-
-    tasks.push({
-      id: `task-srs-${Date.now()}-3`,
-      title: 'Anki Spaced Repetition (A2 Expansion)',
-      resourceId: srsRes.id,
-      resourceTitle: srsRes.title,
-      resourceUrl: srsRes.url,
-      durationMinutes: srsTime,
-      skill: 'Vocab',
-      nature: 'srs_retrieval',
-      instructions: 'Maintain daily flashcard reviews. Add newly discovered words from the InnerFrench transcript.',
-      completed: false
-    });
-
-    if (readingTime > 0) {
-      tasks.push({
-        id: `task-read-${Date.now()}-4`,
-        title: 'Dialogues & Dictée Practice',
-        resourceId: pffRes.id,
-        resourceTitle: pffRes.title,
-        resourceUrl: pffRes.url,
-        durationMinutes: readingTime,
-        skill: 'CE',
-        nature: 'drill_conjugation',
-        instructions: 'Complete one short dictation on Podcast Français Facile to verify silent letter spelling.',
-        completed: false
-      });
-    }
-  }
-
-  // Rule 4: B1 (Subjunctive & News Auditory Parsing)
-  else if (level === 'B1') {
-    const srsTime = Math.min(15, Math.round(availableMinutes * 0.15));
-    const rfiShadowTime = Math.max(25, Math.round(availableMinutes * 0.35));
-    const quebecoisTime = Math.max(15, Math.round(availableMinutes * 0.25));
-    const writingOrGrammarTime = Math.max(15, availableMinutes - srsTime - rfiShadowTime - quebecoisTime);
-
-    const rfiRes = resources.find(r => r.id === 'rfi-journal-facile') || resources[0];
-    const qcRes = resources.find(r => r.id === 'quebecois-wandering-french') || resources[0];
-    const srsRes = resources.find(r => r.id === 'anki-5000-deck') || resources[0];
-    const vinceRes = resources.find(r => r.id === 'french-school-tv') || resources[0];
-
-    tasks.push({
-      id: `task-rfi-${Date.now()}-1`,
-      title: 'RFI News Shadowing (Real-Time Tempo + Transcript)',
-      resourceId: rfiRes.id,
-      resourceTitle: rfiRes.title,
-      resourceUrl: rfiRes.url,
-      durationMinutes: rfiShadowTime,
-      skill: 'CO',
-      nature: 'active_shadowing',
-      isShadowing: true,
-      instructions: 'Listen to today\'s 10-minute bulletin. Shadow aloud with the transcript at 1.0x speed. Extract 5 formal journalistic collocations.',
-      completed: false,
-      notesForIndianLearner: 'This develops the rapid ear-parsing ability required for TEF Compréhension Orale.'
-    });
-
-    tasks.push({
-      id: `task-qc-${Date.now()}-2`,
-      title: 'Québécois Dialect & Accent Ear Calibration',
-      resourceId: qcRes.id,
-      resourceTitle: qcRes.title,
-      resourceUrl: qcRes.url,
-      durationMinutes: quebecoisTime,
-      skill: 'CO',
-      nature: 'passive_input',
-      instructions: 'Watch one breakdown of Canadian French phonetic differences (affrication, diphthongs, and Canadian vocabulary).',
-      completed: false,
-      notesForIndianLearner: 'Essential for TEF/TCF Canada listening sections containing Montreal/Quebec recordings.'
-    });
-
-    tasks.push({
-      id: `task-prod-${Date.now()}-3`,
-      title: 'Subjonctif & Argumentative Connector Drills',
-      resourceId: vinceRes.id,
-      resourceTitle: vinceRes.title,
-      resourceUrl: vinceRes.url,
-      durationMinutes: writingOrGrammarTime,
-      skill: 'EO',
-      nature: 'production_prompt',
-      instructions: 'Write or speak 3 sentences using Subjonctif triggers (\"Il faut que...\", \"Bien que...\") and logical connectors (\"En revanche\", \"Par conséquent\").',
-      completed: false
-    });
-
-    if (srsTime > 0) {
-      tasks.push({
-        id: `task-srs-${Date.now()}-4`,
-        title: 'Anki 5000 Vocabulary Review',
-        resourceId: srsRes.id,
-        resourceTitle: srsRes.title,
-        resourceUrl: srsRes.url,
-        durationMinutes: srsTime,
-        skill: 'Vocab',
-        nature: 'srs_retrieval',
-        instructions: 'Clear daily reviews to sustain lexical depth.',
-        completed: false
-      });
-    }
-  }
-
-  // Rule 5: B2 (TEF/TCF Canada Timed Simulation Sprint)
-  else {
-    const mockTime = Math.max(40, Math.round(availableMinutes * 0.5));
-    const speakingTime = Math.max(25, Math.round(availableMinutes * 0.3));
-    const writingOrVocabTime = Math.max(15, availableMinutes - mockTime - speakingTime);
-
-    const feiRes = resources.find(r => r.id === 'fei-tcf-samples') || resources.find(r => r.id === 'tv5-tcf-simulator') || resources[0];
-    const vinceRes = resources.find(r => r.id === 'french-school-tv') || resources[0];
-    const ccipRes = resources.find(r => r.id === 'ccip-tef-samples') || resources[0];
-
-    tasks.push({
-      id: `task-mock-${Date.now()}-1`,
-      title: 'Official FEI / TV5Monde Timed Exam Simulation',
-      resourceId: feiRes.id,
-      resourceTitle: feiRes.title,
-      resourceUrl: feiRes.url,
-      durationMinutes: mockTime,
-      skill: 'Exam_Mock',
-      nature: 'timed_mock',
-      instructions: 'Complete a timed Compréhension Orale or Compréhension Écrite section. Grade errors and analyze why distractors were chosen.',
-      completed: false,
-      notesForIndianLearner: 'Never replay audio during test simulation. Real TEF audio plays once only.'
-    });
-
-    tasks.push({
-      id: `task-speaking-${Date.now()}-2`,
-      title: 'TEF Expression Orale Section A & B Simulation',
-      resourceId: vinceRes.id,
-      resourceTitle: vinceRes.title,
-      resourceUrl: vinceRes.url,
-      durationMinutes: speakingTime,
-      skill: 'EO',
-      nature: 'production_prompt',
-      instructions: 'Section A: Ask 10 rapid questions to an examiner based on a sample ad. Section B: Give a 5-minute persuasive speech to a friend.',
-      completed: false,
-      notesForIndianLearner: 'Section A = VOUS (formal inquiry). Section B = TU (informal persuasion).'
-    });
-
-    tasks.push({
-      id: `task-writing-${Date.now()}-3`,
-      title: 'Expression Écrite Section B (200-Word Essay)',
-      resourceId: ccipRes.id,
-      resourceTitle: ccipRes.title,
-      resourceUrl: ccipRes.url,
-      durationMinutes: writingOrVocabTime,
-      skill: 'EE',
-      nature: 'production_prompt',
-      instructions: 'Draft a formal argumentative letter to the editor. Incorporate at least 4 logical connectors and 1 subjunctive structure.',
-      completed: false
-    });
+  // Normalize total minutes to match availableMinutes
+  const totalGen = tasks.reduce((sum, t) => sum + t.durationMinutes, 0);
+  if (totalGen !== availableMinutes && tasks.length > 0) {
+    const diff = availableMinutes - totalGen;
+    tasks[0].durationMinutes = Math.max(10, tasks[0].durationMinutes + diff);
   }
 
   // Calculate active output %
@@ -384,9 +198,7 @@ export function calculateEstimatedTargetDate(
   const milestoneIndex = milestones.findIndex(m => m.id === currentMilestoneId);
   const remainingMilestones = milestones.slice(milestoneIndex >= 0 ? milestoneIndex : 0);
 
-  // Total realistic hours required from current level to B2
   const totalHoursNeeded = remainingMilestones.reduce((sum, m) => sum + m.targetHoursFloor, 0);
-  
   const dailyHours = dailyMinutes / 60;
   const daysRemaining = Math.ceil(totalHoursNeeded / dailyHours);
   const monthsRemaining = Math.max(1, Math.round(daysRemaining / 30));

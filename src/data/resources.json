@@ -3,7 +3,7 @@
     "id": "tv5-tcf-simulator",
     "title": "TV5Monde TCF Canada Digital Exam Simulator",
     "creatorOrSource": "TV5Monde & France Éducation international",
-    "url": "https://apprendre.tv5monde.com/fr/tcf",
+    "url": "https://apprendre.tv5monde.com/fr/exercices/tcf",
     "badge": "Deep Free Question Bank",
     "cefrLevels": [
       "A2",
@@ -184,7 +184,7 @@
     "id": "le-conjugueur",
     "title": "Le Conjugueur (Le Figaro) & Bescherelle Drills",
     "creatorOrSource": "Le Figaro / Hatier",
-    "url": "https://leconjugueur.lefigaro.fr/frlesexercices.php",
+    "url": "https://leconjugueur.lefigaro.fr/",
     "badge": "Mandatory Daily Drills",
     "cefrLevels": [
       "A1",
@@ -276,7 +276,7 @@
     "id": "french-sounds-phonetics",
     "title": "French Sounds & Pronunciation Masterclass",
     "creatorOrSource": "French Sounds / Learn French with Alexa",
-    "url": "https://www.youtube.com/c/FrenchSounds",
+    "url": "https://www.youtube.com/@frenchsounds",
     "badge": "Phonetic Foundation (Phase 0)",
     "cefrLevels": [
       "A0",
