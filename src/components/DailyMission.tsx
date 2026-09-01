@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   Circle, 
@@ -491,11 +491,6 @@ export const DailyMission: React.FC<DailyMissionProps> = ({
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span className="text-[10px] font-semibold">Uncheck</span>
                       </button>
-                    </div>
-                  </div>
-                    <div className="text-right font-mono">
-                      <span className="text-emerald-400 font-bold">+{entry.durationMinutes}m</span>
-                      <div className="text-[10px] text-slate-500">{new Date(entry.completedAt).toLocaleDateString()}</div>
                     </div>
                   </div>
                 ))
