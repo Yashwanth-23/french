@@ -1,5 +1,6 @@
 ﻿import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { UserProfile, UserPreferences, StudyLogEntry } from '../types/preferences';
+import { UserProfile, UserPreferences, StudyLogEntry, SecondaryLanguageBridge } from '../types/preferences';
+import { MediaFormat } from '../types/curriculum';
 import { DailyTask } from '../types/curriculum';
 import { generateDailyPlan } from './recommender';
 
