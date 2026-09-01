@@ -12,12 +12,10 @@ import { HelpGuideModal } from './components/HelpGuideModal';
 import { 
   getActiveSlugFromUrlOrStorage, 
   fetchProfile, 
-  saveProfileToCloud, 
-  isSupabaseConfigured 
+  saveProfileToCloud 
 } from './engine/dataService';
 import { UserProfile } from './types/preferences';
 import { CEFRLevel } from './types/curriculum';
-import { Cloud, Info, ExternalLink } from 'lucide-react';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('mission');
@@ -44,7 +42,7 @@ export function App() {
         }
       }
 
-      // No profile found -> trigger Onboarding Wizard
+      // No profile found -> trigger Onboarding Wizard for clean fresh start
       setIsLoading(false);
       setIsOnboardingModalOpen(true);
     }
@@ -80,7 +78,7 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         activeProfile={activeProfile}
-        onOpenProfileModal={() => setIsOnboardingModalOpen(true)}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenDiagnosticModal={() => setIsDiagnosticModalOpen(true)}
         onOpenHelpModal={() => setIsHelpModalOpen(true)}
       />
@@ -164,7 +162,9 @@ export function App() {
       {/* Modals */}
       <OnboardingModal
         isOpen={isOnboardingModalOpen}
-        onClose={() => setIsOnboardingModalOpen(false)}
+        onClose={() => {
+          if (activeProfile) setIsOnboardingModalOpen(false);
+        }}
         onProfileCreated={handleProfileCreatedOrUpdated}
         isInitialSetup={!activeProfile}
       />
@@ -183,6 +183,15 @@ export function App() {
           setActiveTab(tab);
         }}
       />
+
+      {activeProfile && (
+        <ProfileSwitcher
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          activeProfile={activeProfile}
+          onProfileChanged={handleProfileCreatedOrUpdated}
+        />
+      )}
 
     </div>
   );
