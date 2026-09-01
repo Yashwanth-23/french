@@ -161,7 +161,7 @@ export async function generateUniqueSlug(baseName: string): Promise<string> {
 export async function fetchProfile(slug: string): Promise<UserProfile | null> {
   if (!slug) return null;
 
-  // 1. Try Supabase Cloud DB
+  // 1. Try Supabase Cloud DB (Single Source of Truth)
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -177,13 +177,31 @@ export async function fetchProfile(slug: string): Promise<UserProfile | null> {
         saveLocalBackupProfiles(local);
         localStorage.setItem(ACTIVE_SLUG_KEY, slug);
         return profile;
+      } else if (!data && !error) {
+        // Explicitly NOT found in cloud database: Purge zombie local cache!
+        const local = getLocalBackupProfiles();
+        if (local[slug]) {
+          delete local[slug];
+          saveLocalBackupProfiles(local);
+        }
+        if (localStorage.getItem(ACTIVE_SLUG_KEY) === slug) {
+          localStorage.removeItem(ACTIVE_SLUG_KEY);
+        }
+        // Remove stale ?user= parameter from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('user') === slug) {
+          urlParams.delete('user');
+          const newSearch = urlParams.toString() ? `?${urlParams.toString()}` : '';
+          window.history.replaceState({}, '', `${window.location.pathname}${newSearch}`);
+        }
+        return null;
       }
     } catch (err) {
-      console.warn('Supabase fetch error', err);
+      console.warn('Supabase offline; attempting local cache fallback', err);
     }
   }
 
-  // 2. Check Local Backup Cache
+  // 2. Fallback to Local Backup Cache ONLY if network is offline
   const local = getLocalBackupProfiles();
   if (local[slug]) {
     localStorage.setItem(ACTIVE_SLUG_KEY, slug);
