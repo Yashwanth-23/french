@@ -35,13 +35,17 @@ function saveLocalBackupProfiles(profiles: Record<string, UserProfile>): void {
 // Convert DB row to UserProfile
 
 const LEGACY_URL_FIXES: Record<string, string> = {
-  'https://www.youtube.com/watch?v=sU1H4hT_hH8': 'https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un',
-  'https://www.youtube.com/@frenchsounds': 'https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un',
+  'https://www.youtube.com/watch?v=sU1H4hT_hH8': 'https://www.youtube.com/@frenchsounds/search?query=nasal+vowels',
+  'https://www.youtube.com/@frenchsounds': 'https://www.youtube.com/@frenchsounds/search?query=nasal+vowels',
+  'https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un': 'https://www.youtube.com/@frenchsounds/search?query=nasal+vowels',
   'https://leconjugueur.lefigaro.fr/conjugaison/du/verbe/etre.html': 'https://leconjugueur.lefigaro.fr/conjugaison/verbe/etre.html',
-  'https://www.youtube.com/@WanderingFrench': 'https://www.youtube.com/results?search_query=Wandering+French+Quebecois+pronunciation+rules',
-  'https://www.youtube.com/@FrenchSchoolTV': 'https://www.youtube.com/results?search_query=French+School+TV+TEF+Expression+Orale+Section+A',
-  'https://www.youtube.com/watch?v=1b-3i_bH1s0': 'https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself',
-  'https://www.youtube.com/@EasyFrench': 'https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself'
+  'https://www.youtube.com/@WanderingFrench': 'https://www.youtube.com/@WanderingFrench/search?query=prononciation',
+  'https://www.youtube.com/results?search_query=Wandering+French+Quebecois+pronunciation+rules': 'https://www.youtube.com/@WanderingFrench/search?query=prononciation',
+  'https://www.youtube.com/@FrenchSchoolTV': 'https://www.youtube.com/@FrenchSchoolTV/search?query=expression+orale+TEF',
+  'https://www.youtube.com/results?search_query=French+School+TV+TEF+Expression+Orale+Section+A': 'https://www.youtube.com/@FrenchSchoolTV/search?query=expression+orale+TEF',
+  'https://www.youtube.com/watch?v=1b-3i_bH1s0': 'https://www.youtube.com/playlist?list=PL3936178A38BB5F87',
+  'https://www.youtube.com/@EasyFrench': 'https://www.youtube.com/playlist?list=PL3936178A38BB5F87',
+  'https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself': 'https://www.youtube.com/playlist?list=PL3936178A38BB5F87'
 };
 
 function sanitizeTaskQueue(tasks: any[]): DailyTask[] {

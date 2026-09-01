@@ -46,7 +46,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'Phonetics',
         actionTitle: 'Mouth Anatomy & Nasal Vowel Drills (an/en, on, in, un)',
-        directLessonUrl: 'https://www.youtube.com/results?search_query=French+Sounds+nasal+vowels+an+in+on+un',
+        directLessonUrl: 'https://www.youtube.com/@frenchsounds/search?query=nasal+vowels',
         directLessonTitle: 'French Sounds: 4 Nasal Vowels (AN, IN, ON, UN) Cross-Section Masterclass',
         minMinutes: 15,
         weight: 0.40,
@@ -136,7 +136,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CO',
         actionTitle: 'Comprehensible Input: Active Auditory Parsing',
-        directLessonUrl: 'https://www.youtube.com/results?search_query=Super+Easy+French+1+introducing+yourself',
+        directLessonUrl: 'https://www.youtube.com/playlist?list=PL3936178A38BB5F87',
         directLessonTitle: 'Super Easy French 1: Se Présenter / Introducing Yourself (Slow French + Subtitles)',
         minMinutes: 15,
         weight: 0.30,
@@ -258,7 +258,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'CO',
         actionTitle: 'Québécois Dialect & Accent Ear Calibration',
-        directLessonUrl: 'https://www.youtube.com/results?search_query=Wandering+French+Quebecois+pronunciation+rules',
+        directLessonUrl: 'https://www.youtube.com/@WanderingFrench/search?query=prononciation',
         directLessonTitle: 'Wandering French: 10 Phonetic Keys to Understand Canadian French & Affrication',
         minMinutes: 15,
         weight: 0.25,
@@ -326,7 +326,7 @@ const ALLOCATION_RULES: Record<CEFRLevel, PhaseAllocationRule> = {
       {
         skill: 'EO',
         actionTitle: 'Expression Orale Simulation: Section A & B Roleplays',
-        directLessonUrl: 'https://www.youtube.com/results?search_query=French+School+TV+TEF+Expression+Orale+Section+A',
+        directLessonUrl: 'https://www.youtube.com/@FrenchSchoolTV/search?query=expression+orale+TEF',
         directLessonTitle: 'French School TV: TEF/TCF Canada Speaking Section A & B Formula Masterclass',
         minMinutes: 25,
         weight: 0.30,
