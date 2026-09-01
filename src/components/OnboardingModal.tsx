@@ -338,7 +338,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       type="text"
                       placeholder="e.g. yash, alex23, or click Random Handle"
                       value={username}
-                      onChange={(e) => setUsername(slugify(e.target.value))}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
                       className={`w-full bg-slate-900 border rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition ${
                         slugAvailable === false
                           ? 'border-rose-500 focus:border-rose-500'

@@ -350,7 +350,7 @@ export const ProfileSwitcher: React.FC<ProfileSwitcherProps> = ({
                   type="text"
                   placeholder="e.g. marie23, or click Random"
                   value={newUsername}
-                  onChange={(e) => setNewUsername(slugify(e.target.value))}
+                  onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500"
                   required
                 />
